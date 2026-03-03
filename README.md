@@ -1,7 +1,7 @@
 # Inderes-Student-Coverage-2026-
 Equity research project conducted as part of the Inderes Student Coverage program. The project includes a full initiation report on Inderes Oyj, covering business analysis, industry dynamics, financial modeling, and valuation. The repository contains supporting materials, including the interactive valuation prototype and project artifacts.
 
-Inderes Student Coverage – Equity Research Project
+**Inderes Student Coverage – Equity Research Project**
 
 Equity research project completed as part of the Inderes Student Coverage Program.
 The project includes a full initiation analysis of Inderes Oyj, covering business model analysis, financial modeling, and valuation.
@@ -10,10 +10,10 @@ The repository contains supporting materials related to the research project, in
 
 Project Overview
 
-The objective of the project was to conduct a comprehensive equity analysis of Inderes Oyj and produce an initiation-style research report similar to those published by professional sell-side analysts.
+The objective of the project was to conduct a **comissioned** comprehensive equity analysis of Inderes Oyj and produce an initiation-style research report similar to those published by professional sell-side analysts.
 
-The analysis includes:
-
+**The analysis includes:**
+_
 Business model and industry analysis
 
 Competitive positioning
@@ -24,7 +24,7 @@ Forecast modeling
 
 Valuation analysis
 
-Investment thesis and key risks
+Investment thesis and key risks_
 
 Repository Structure
 inderes-student-coverage
@@ -56,13 +56,13 @@ The prototype demonstrates how equity research outputs (financial forecasts, val
 
 Authors
 
-Student Coverage Team:
+**Student Coverage Team:**
 
-Matias Sainio
+_Matias Sainio
 
 Joonas Sjöblom
 
-Tino Korjala
+Tino Korjala_
 
 Disclaimer
 
