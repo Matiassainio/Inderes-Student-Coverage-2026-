@@ -58,11 +58,11 @@ Authors
 
 **Student Coverage Team:**
 
-_Matias Sainio
+__Matias Sainio
 
 Joonas Sjöblom
 
-Tino Korjala_
+Tino Korjala__
 
 Disclaimer
 
