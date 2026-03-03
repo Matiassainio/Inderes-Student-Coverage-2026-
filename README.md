@@ -31,8 +31,7 @@ inderes-student-coverage
 │
 README.md
 │
-report/
-   initiation_report.pdf
+https://www.inderes.fi/files/ac122b63-ee93-4650-a593-652a3a3790d0
 │
 interactive-model/
    index.html
