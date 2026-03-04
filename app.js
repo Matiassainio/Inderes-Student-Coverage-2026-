@@ -11,8 +11,8 @@ const COLORS = {
   lightGray: '#e8e8e8',
 };
 
-/* Placeholder share count (thousands) */
-const SHARE_COUNT_K = 1_755.132;
+/* Osakkeiden lukumäärä (milj.) — Tilinpäätös 2024 */
+const SHARE_COUNT_K = 1_719.141;
 
 /* Base historical financials (EUR thousands) */
 const HISTORICAL = {
@@ -35,11 +35,11 @@ let state = {
     revenueCAGR:  0.08,   // 8%
     ebitMargin:   0.14,   // 14%
     wacc:         0.094,  // 9.4%
-    termGrowth:   0.0,    // 0%
+    termGrowth:   0.01,   // 1%
   },
   weights: {
-    dcfA: 0.60,  // 60%
-    dcfB: 0.40,  // 40%
+    dcfA: 0.75,  // 75%
+    dcfB: 0.25,  // 25%
   },
   manualFcf: {
     dcfA: {
@@ -59,7 +59,7 @@ let state = {
         2027: 1906,
         2028: 1803,
         2029: 1800,
-        2030: 1496,
+        2030: 1495.5,
       },
     },
   },
@@ -67,10 +67,10 @@ let state = {
 
 const VALUATION_YEARS = [2026, 2027, 2028, 2029, 2030];
 
-/* Balance sheet items for equity bridge (EUR thousands) */
-const CASH          = 2_300;   // Rahavarat
-const DEBT          = 1_800;   // Korollinen velka
-const MINORITY      = 100;     // Vähemmistöosuus
+/* Balance sheet items for equity bridge (EUR thousands) — Tilinpäätös 2024 */
+const CASH          = 2_310;   // Rahavarat
+const DEBT          = 1_801;   // Korollinen velka
+const MINORITY      = 0;       // Vähemmistöosuus
 
 /* ── Utility helpers ──────────────────────────────────────── */
 const fmt = {
@@ -105,7 +105,7 @@ function calcDCF(params) {
   const pvFCFs = fcfs.map((f, i) => f / Math.pow(1 + wacc, i + 1));
   const sumPV  = pvFCFs.reduce((a, b) => a + b, 0);
 
-  // Terminal value (Gordon growth), discounted one extra period
+  // Terminal value (Gordon growth), discounted one period beyond last FCF
   const lastFCF    = fcfs.at(-1);
   const TV         = termGrowth > 0
     ? (lastFCF * (1 + termGrowth)) / (wacc - termGrowth)
@@ -157,7 +157,7 @@ function calcDCFValuation(params, manualOverride) {
   const pvFCFs = fcfs.map((f, i) => f / Math.pow(1 + wacc, i + 1));
   const sumPV = pvFCFs.reduce((a, b) => a + b, 0);
 
-  // Terminal value (Gordon growth) discounted one period beyond last forecast year
+  // Terminal value (Gordon growth) discounted one period beyond last FCF
   const lastFCF = fcfs.at(-1);
   const TV = termGrowth > 0
     ? (lastFCF * (1 + termGrowth)) / (wacc - termGrowth)

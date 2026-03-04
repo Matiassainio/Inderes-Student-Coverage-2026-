@@ -465,6 +465,8 @@ main#main-content {
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--black);
+  display: block;
+  margin-left: 0.5em; /* sama kuin input padding vasemmalla */
 }
 
 @media (max-width: 1000px) {
