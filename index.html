@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inderes Oyj — Interaktiivinen analyysi</title>
+  <meta name="description" content="Inderes Oyj:n interaktiivinen DCF-arvonmääritysmalli, skenaarioanalyysi ja taloudelliset ennusteet." />
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  <!-- PDF.js (inline PDF viewer) -->
+  <script src="assets/pdf.min.js"></script>
+
+  <!-- Google Fonts (loaded via CSS) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Inderes Student Coverage -brändi yläosaan keskelle -->
+  <div class="student-coverage-banner">Inderes Student Coverage</div>
+
+<!-- ============================================================
+     DISCLAIMER MODAL
+     ============================================================ -->
+<div id="disclaimer-overlay">
+  <div id="disclaimer-modal">
+    <h2>Tietoa mallista</h2>
+    <div class="disclaimer-body">
+      <p>
+        Interaktiivisen valuaatiomallin tarkoitus on toimia jo tuotetun analyysin tukena. Kyseessä on 
+        MVP-vaiheessa (minimum viable product) oleva malli, ja se voi kohtuullisella 
+        todennäköisyydellä olla virheellinen.
+      </p>
+      <p>
+        Student Coverage -analyytikot opiskelevat rahoitusta, eivät tietojenkäsittelytiedettä. 
+        
+      </p>
+      <p>
+        Mallin laskelmat perustuvat julkisiin tietoihin ja analyytikon arvioihin. 
+        Kaikki luvut ovat viitteellisiä tai analyytikon arvioita eivätkä edusta Inderes Oyj:n virallisia lukuja.
+      </p>
+    </div>
+    <button id="accept-disclaimer" onclick="document.getElementById('disclaimer-overlay').remove();">Ymmärrän</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     TOP HEADER
+     ============================================================ -->
+<header class="topbar">
+  <div class="topbar-brand" aria-hidden="true"></div>
+  <div class="topbar-meta">
+    <strong>INDERES STUDENT COVERAGE</strong>
+     
+  </div>
+</header>
+
+<!-- ============================================================
+     APP SHELL
+     ============================================================ -->
+<div id="app-shell">
+
+  <!-- MAIN CONTENT -->
+  <main id="main-content">
+
+  <div class="section-block" id="analysts">
+    <section class="section" aria-label="Analyytikkotiimi">
+      <div class="analyst-header">
+        <p class="toc-main-title">SEURANTATIIMI</p>
+        <div class="toc-rule" aria-hidden="true"></div>
+      </div>
+      <!-- Analyst Team -->
+      <div class="analysts-row">
+      <div class="analyst-card">
+        <picture class="analyst-photo-container">
+          <source srcset="assets/analysts/matias-sainio.webp" type="image/webp">
+          <img src="assets/analysts/matias-sainio.jpg" alt="Matias Sainio" class="analyst-photo" width="900" height="900" loading="lazy" decoding="async" />
+        </picture>
+        <p class="analyst-name">Matias Sainio</p>
+        <p class="analyst-role">Analyytikko — Vastaa interaktiivisesta mallinnuksesta</p>
+        <a class="analyst-linkedin" href="https://www.linkedin.com/in/matias-sainio-431693192/" target="_blank" rel="noopener noreferrer">
+          <img class="analyst-linkedin-icon" src="assets/linkedin-logo-svgrepo-com.svg" alt="LinkedIn" width="20" height="20" loading="lazy" decoding="async" />
+        </a>
+      </div>
+      <div class="analyst-card">
+        <picture class="analyst-photo-container">
+          <source srcset="assets/analysts/joonas-sjoblom.webp" type="image/webp">
+          <img src="assets/analysts/joonas-sjoblom.jpg" alt="Joonas Sjöblom" class="analyst-photo" width="600" height="600" loading="lazy" decoding="async" />
+        </picture>
+        <p class="analyst-name">Joonas Sjöblom</p>
+        <p class="analyst-role">Analyytikko</p>
+        <a class="analyst-linkedin" href="https://www.linkedin.com/in/joonas-s-128aa9161/" target="_blank" rel="noopener noreferrer">
+          <img class="analyst-linkedin-icon" src="assets/linkedin-logo-svgrepo-com.svg" alt="LinkedIn" width="20" height="20" loading="lazy" decoding="async" />
+        </a>
+      </div>
+      <div class="analyst-card">
+        <picture class="analyst-photo-container">
+          <source srcset="assets/analysts/tino-korjala.webp" type="image/webp">
+          <img src="assets/analysts/tino-korjala.jpg" alt="Tino Korjala" class="analyst-photo" width="600" height="600" loading="lazy" decoding="async" />
+        </picture>
+        <p class="analyst-name">Tino Korjala</p>
+        <p class="analyst-role">Analyytikko</p>
+        <a class="analyst-linkedin" href="https://www.linkedin.com/in/tino-korjala-354b6726b/" target="_blank" rel="noopener noreferrer">
+          <img class="analyst-linkedin-icon" src="assets/linkedin-logo-svgrepo-com.svg" alt="LinkedIn" width="20" height="20" loading="lazy" decoding="async" />
+        </a>
+      </div>
+    </div>
+    </section>
+  </div>
+
+  <div class="section-block" id="toc-block">
+    <section class="section section--toc" aria-label="Sisällysluettelo">
+      <nav class="toc-under-analysts" data-role="pdf-toc">
+        <div class="toc-header">
+          <p class="toc-main-title">SISÄLLYSLUETTELO <span class="toc-main-title-en">(SISÄLTÖ ENGLANNIKSI)</span></p>
+          <div class="toc-rule" aria-hidden="true"></div>
+        </div>
+
+        <div class="toc-columns">
+          <div class="toc-col">
+            <a class="toc-entry" href="#key-findings">
+              <span class="toc-num">1</span>
+              <span class="toc-text">Keskeiset havainnot &amp; tavoitehinta</span>
+              <span class="toc-meta" aria-hidden="true">&nbsp;</span>
+            </a>
+            <a class="toc-entry" href="#introduction">
+              <span class="toc-num">2</span>
+              <span class="toc-text">Johdanto</span>
+              <span class="toc-meta" aria-hidden="true">&nbsp;</span>
+            </a>
+            <a class="toc-entry" href="#business">
+              <span class="toc-num">3</span>
+              <span class="toc-text">Inderes yhtiönä</span>
+              <span class="toc-meta" aria-hidden="true">&nbsp;</span>
+            </a>
+            <a class="toc-entry" href="#strategy-governance-ownership">
+              <span class="toc-num">4</span>
+              <span class="toc-text">Strategia, hallinnointi &amp; omistajuus</span>
+              <span class="toc-meta" aria-hidden="true">&nbsp;</span>
+            </a>
+            <a class="toc-entry" href="#competitive-landscape">
+              <span class="toc-num">5</span>
+              <span class="toc-text">Kilpailukenttä</span>
+              <span class="toc-meta" aria-hidden="true">&nbsp;</span>
+            </a>
+          </div>
+
+          <div class="toc-col">
+            <a class="toc-entry" href="#operating-environment">
+              <span class="toc-num">6</span>
+              <span class="toc-text">Toimintaympäristö</span>
+              <span class="toc-meta" aria-hidden="true">&nbsp;</span>
+            </a>
+            <a class="toc-entry" href="#esg-considerations">
+              <span class="toc-num">7</span>
+              <span class="toc-text">ESG-näkökohdat</span>
+              <span class="toc-meta" aria-hidden="true">&nbsp;</span>
+            </a>
+            <a class="toc-entry" href="#forecast">
+              <span class="toc-num">8</span>
+              <span class="toc-text">Ennusteet</span>
+              <span class="toc-meta" aria-hidden="true">&nbsp;</span>
+            </a>
+            <a class="toc-entry" href="#valuation">
+              <span class="toc-num">9</span>
+              <span class="toc-text">Arvonmääritys</span>
+              <span class="toc-meta" aria-hidden="true">&nbsp;</span>
+            </a>
+            <a class="toc-entry" href="#appendices">
+              <span class="toc-num">10</span>
+              <span class="toc-text">Liitteet</span>
+              <span class="toc-meta" aria-hidden="true">&nbsp;</span>
+            </a>
+          </div>
+        </div>
+      </nav>
+    </section>
+  </div>
+
+  <div class="section-block" id="pdf-report">
+    <section class="section" aria-label="Raportti (PDF)">
+      <p class="toc-main-title" style="text-align:center; margin-bottom:26px;">Raportti</p>
+
+      <div class="pdf-viewer" role="region" aria-label="Upotettu PDF-lukija">
+        <div class="pdf-toolbar">
+          <button class="pdf-nav-btn" id="pdf-prev" title="Edellinen sivu" aria-label="Edellinen sivu">&#9664;</button>
+          <span class="pdf-page-label" id="pdf-page-label">Ladataan…</span>
+          <input class="pdf-page-input" id="pdf-page-input" type="number" min="1" value="1" title="Siirry sivulle" aria-label="Sivunumero" />
+          <button class="pdf-nav-btn" id="pdf-next" title="Seuraava sivu" aria-label="Seuraava sivu">&#9654;</button>
+          <div class="pdf-toolbar-spacer"></div>
+          <button class="pdf-nav-btn" id="pdf-zoom-out" title="Loitonna" aria-label="Loitonna">−</button>
+          <span class="pdf-zoom-label" id="pdf-zoom-label">100 %</span>
+          <button class="pdf-nav-btn" id="pdf-zoom-in" title="Lähennä" aria-label="Lähennä">+</button>
+        </div>
+        <div class="pdf-canvas-wrap" id="pdf-canvas-wrap">
+          <canvas id="pdf-canvas"></canvas>
+        </div>
+        <p class="pdf-fallback" id="pdf-fallback" hidden>
+          PDF:n lataus epäonnistui. Varmista, että tiedosto löytyy polusta
+          <strong>/assets/Initiation of coverage Inderes, From Finnish roots to scalable platforms.pdf</strong>.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <div class="section-block">
+    <section class="section">
+      <div class="section-heading">
+        <p class="toc-main-title">VERTAILEVA KURSSIKEHITYS</p>
+        <div class="toc-rule" aria-hidden="true"></div>
+      </div>
+
+      <div class="chart-wrapper">
+        <p class="chart-title">Kurssikehitys &mdash; %-muutos (0% = peruspäivä)</p>
+        <div class="chart-toggles" role="group" aria-label="Vertailuindeksit">
+          <label class="chart-toggle">
+            <input type="checkbox" id="toggle-omxh25" checked />
+            <span>OMX Helsinki 25</span>
+          </label>
+          <label class="chart-toggle">
+            <input type="checkbox" id="toggle-firstnorth" checked />
+            <span>First North Finland PI</span>
+          </label>
+        </div>
+        <div style="position:relative; height:260px;">
+          <canvas id="historical-price-chart"></canvas>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+  <div class="section-block">
+    <!-- ======================================================
+         05 — FORECAST
+         ====================================================== -->
+    <section class="section" id="forecast">
+      <div class="section-heading">
+        <p class="toc-main-title">ENNUSTE JA SKENAARIOANALYYSI</p>
+        <div class="toc-rule" aria-hidden="true"></div>
+      </div>
+
+      <p class="section-lead">
+        Mallinnnamme kolme skenaariota vapaan kassavirran kehitykselle vuoteen 2028E.
+        Perusskenaario olettaa jatkuvaa pohjoismaista laajentumista, vakaata marginaalin
+        kasvua ja kurinalaista pääoman käyttöä. Riskiskenaario soveltaa konservatiivista
+        liikevaihdon hidastumista ja marginaalien puristumista kilpailun lisääntyessä.
+      </p>
+
+      <!-- FCF Chart -->
+      <div class="chart-wrapper">
+        <p class="chart-title">Ennustettu vapaa kassavirta &mdash; EUR tuhatta &mdash; 2026E&ndash;2030E</p>
+        <div style="position:relative; height:280px;">
+          <canvas id="fcf-chart"></canvas>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><span class="legend-dot base"></span> Perusskenaario</div>
+          <div class="legend-item"><span class="legend-dot risk"></span> Riskiskenaario</div>
+          <div class="legend-item"><span class="legend-dot user"></span> Käyttäjän skenaario (säädä oletuksia)</div>
+        </div>
+      </div>
+
+      <!-- Manuaalinen FCF syöte -->
+      <div class="control-group valuation-fcf" style="margin-top:18px;">
+        <h4 class="group-title">Vapaa kassavirta (manuaalinen)</h4>
+        <div class="weight-controls">
+          <p class="manual-fcf-note">Syötä FCF-ennusteet (2026&ndash;2030). Syötteet päivittävät yllä olevan kuvan sekä arvonmäärityksen laskelmat. Voit antaa sarjat erikseen DCF A:lle ja DCF B:lle.</p>
+
+          <div class="manual-fcf-block" aria-label="DCF A manuaaliset FCF-syötöt">
+            <p class="manual-fcf-block-label"><strong>DCF A</strong> — Vapaa kassavirta (2026&ndash;2030, EUR tuhatta)</p>
+            <div id="manual-fcf-a-grid" class="manual-fcf-grid">
+              <div class="manual-fcf-col">
+                <label>2026E</label>
+                <input type="number" inputmode="decimal" id="manual-fcf-a-2026" class="manual-fcf-input" />
+                <div class="manual-fcf-analyst">Analyytikon arvio: 1 700</div>
+              </div>
+              <div class="manual-fcf-col">
+                <label>2027E</label>
+                <input type="number" inputmode="decimal" id="manual-fcf-a-2027" class="manual-fcf-input" />
+                <div class="manual-fcf-analyst">2 560</div>
+              </div>
+              <div class="manual-fcf-col">
+                <label>2028E</label>
+                <input type="number" inputmode="decimal" id="manual-fcf-a-2028" class="manual-fcf-input" />
+                <div class="manual-fcf-analyst">2 940</div>
+              </div>
+              <div class="manual-fcf-col">
+                <label>2029E</label>
+                <input type="number" inputmode="decimal" id="manual-fcf-a-2029" class="manual-fcf-input" />
+                <div class="manual-fcf-analyst">3 310</div>
+              </div>
+              <div class="manual-fcf-col">
+                <label>2030E</label>
+                <input type="number" inputmode="decimal" id="manual-fcf-a-2030" class="manual-fcf-input" />
+                <div class="manual-fcf-analyst">3 990</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="manual-fcf-block" aria-label="DCF B manuaaliset FCF-syötöt" style="margin-top:12px;">
+            <p class="manual-fcf-block-label"><strong>DCF B</strong> — Vapaa kassavirta (2026&ndash;2030, EUR tuhatta)</p>
+            <div id="manual-fcf-b-grid" class="manual-fcf-grid">
+              <div class="manual-fcf-col">
+                <label>2026E</label>
+                <input type="number" inputmode="decimal" id="manual-fcf-b-2026" class="manual-fcf-input" />
+                <div class="manual-fcf-analyst">Analyytikon arvio: 1 859</div>
+              </div>
+              <div class="manual-fcf-col">
+                <label>2027E</label>
+                <input type="number" inputmode="decimal" id="manual-fcf-b-2027" class="manual-fcf-input" />
+                <div class="manual-fcf-analyst">1 906</div>
+              </div>
+              <div class="manual-fcf-col">
+                <label>2028E</label>
+                <input type="number" inputmode="decimal" id="manual-fcf-b-2028" class="manual-fcf-input" />
+                <div class="manual-fcf-analyst">1 803</div>
+              </div>
+              <div class="manual-fcf-col">
+                <label>2029E</label>
+                <input type="number" inputmode="decimal" id="manual-fcf-b-2029" class="manual-fcf-input" />
+                <div class="manual-fcf-analyst">1 800</div>
+              </div>
+              <div class="manual-fcf-col">
+                <label>2030E</label>
+                <input type="number" inputmode="decimal" id="manual-fcf-b-2030" class="manual-fcf-input" />
+                <div class="manual-fcf-analyst">1 496</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Forecast Table -->
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>EUR tuhatta</th>
+              <th>2024E</th>
+              <th>2025E</th>
+              <th>2026E</th>
+              <th>2027E</th>
+              <th>2028E</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Liikevaihto (perus)</td>
+              <td>25,536</td><td>28,600</td><td>32,032</td><td>35,876</td><td>40,181</td>
+            </tr>
+            <tr>
+              <td>EBIT (perus)</td>
+              <td>4,596</td><td>5,148</td><td>5,766</td><td>6,458</td><td>7,233</td>
+            </tr>
+            <tr>
+              <td>EBIT-marginaali</td>
+              <td>18.0%</td><td>18.0%</td><td>18.0%</td><td>18.0%</td><td>18.0%</td>
+            </tr>
+            <tr>
+              <td>Vapaa kassavirta (perus)</td>
+              <td>3,050</td><td>3,416</td><td>3,826</td><td>4,285</td><td>4,800</td>
+            </tr>
+            <tr class="row-total">
+              <td>Vapaa kassavirta (riski)</td>
+              <td>1,940</td><td>2,120</td><td>2,318</td><td>2,534</td><td>2,770</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+  
+  <div class="section-block">
+    <!-- ======================================================
+         07 — VALUATION
+         ====================================================== -->
+    <section class="section" id="valuation">
+      <div class="section-heading">
+        <p class="toc-main-title">ARVONMÄÄRITYS</p>
+        <div class="toc-rule" aria-hidden="true"></div>
+      </div>
+
+      <p class="section-lead">
+        Käytämme kaksois-DCF-lähestymistapaa todennäköisyyspainotetulla arvonmäärityksellä.
+        DCF A edustaa optimistista kasvuskenaariota, kun taas DCF B heijastaa konservatiivisempaa
+        näkemystä. Lopullinen arvonmääritys on molempien skenaarioiden painotettu keskiarvo.
+        Säädä alla olevia liukusäätimiä muuttaaksesi oletuksia.
+      </p>
+
+      <!-- ── Mallien painotukset ── -->
+      <span id="valuation-weights" class="anchor-target" aria-hidden="true"></span>
+      <div class="control-group" style="margin-bottom:28px;">
+        <h4 class="group-title">Mallien painotukset</h4>
+        <div class="weight-controls">
+          <div class="weight-input">
+            <label>DCF A / DCF B:</label>
+            <input type="range" id="weight-a" min="0" max="100" value="60" />
+            <span class="weight-display" id="weight-a-display">60%</span>
+            <span class="weight-sep" aria-hidden="true">/</span>
+            <span class="weight-display secondary" id="weight-b-display">40%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Todennäköisyysmittarit -->
+      <div class="gauges-row">
+        <div class="gauge-card">
+          <p class="gauge-title">DCF A todennäköisyyspaino</p>
+          <div class="gauge-canvas-wrap">
+            <canvas id="gauge-weight-a" width="180" height="104"></canvas>
+          </div>
+          <p class="gauge-scenario-value" id="gauge-a-per-share">EUR --</p>
+          <p class="gauge-label">Optimistinen skenaario</p>
+          <p class="gauge-desc">Korkeammat kasvuodotukset</p>
+        </div>
+
+        <div class="gauge-card gauge-summary" aria-label="Painotettu arvonmääritys">
+          <p class="gauge-title">Painotettu arvo</p>
+          <p class="gauge-summary-value" id="weighted-per-share-hero">EUR --</p>
+          <p class="gauge-desc">Arvo / osake (DCF A &amp; B)</p>
+        </div>
+
+        <div class="gauge-card">
+          <p class="gauge-title">DCF B todennäköisyyspaino</p>
+          <div class="gauge-canvas-wrap">
+            <canvas id="gauge-weight-b" width="180" height="104"></canvas>
+          </div>
+          <p class="gauge-scenario-value" id="gauge-b-per-share">EUR --</p>
+          <p class="gauge-label">Konservatiivinen skenaario</p>
+          <p class="gauge-desc">Maltilliset kasvuodotukset</p>
+        </div>
+      </div>
+
+      <!-- ── DCF A oletukset ── -->
+      <span id="valuation-assumptions" class="anchor-target" aria-hidden="true"></span>
+      <div class="two-col-text" style="margin-top:32px;">
+        <div class="control-group">
+          <h4 class="group-title toggle" data-target="dcf-a-controls">DCF A oletukset (optimistinen) <span class="toggle-icon">−</span></h4>
+          <div class="control-content" id="dcf-a-controls">
+            <div class="input-row">
+              <label>WACC:</label>
+              <input type="range" id="dcf-a-wacc" min="0.05" max="0.15" step="0.001" value="0.094" />
+              <input type="number" class="number-input" id="dcf-a-wacc-num" min="5" max="15" step="0.1" value="9.4" />%
+            </div>
+            <div class="input-row">
+              <label>Terminaalikasvu:</label>
+              <input type="range" id="dcf-a-terminal" min="0" max="0.05" step="0.005" value="0.01" />
+              <input type="number" class="number-input" id="dcf-a-terminal-num" min="0" max="5" step="0.5" value="1" />%
+            </div>
+          </div>
+        </div>
+
+        <!-- ── DCF B oletukset ── -->
+        <div class="control-group">
+          <h4 class="group-title toggle" data-target="dcf-b-controls">DCF B oletukset (konservatiivinen) <span class="toggle-icon">−</span></h4>
+          <div class="control-content" id="dcf-b-controls">
+            <div class="input-row">
+              <label>WACC:</label>
+              <input type="range" id="dcf-b-wacc" min="0.05" max="0.15" step="0.001" value="0.094" />
+              <input type="number" class="number-input" id="dcf-b-wacc-num" min="5" max="15" step="0.1" value="9.4" />%
+            </div>
+            <div class="input-row">
+              <label>Terminaalikasvu:</label>
+              <input type="range" id="dcf-b-terminal" min="0" max="0.05" step="0.005" value="0" />
+              <input type="number" class="number-input" id="dcf-b-terminal-num" min="0" max="5" step="0.5" value="0" />%
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DCF-tulosten taulukko -->
+      <div class="data-table-wrap" style="margin-top:24px;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>DCF-mallin tulokset</th>
+              <th>DCF A (optimistinen)</th>
+              <th>DCF B (konservatiivinen)</th>
+              <th>Painotettu keskiarvo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Yritysarvo (EUR t)</td>
+              <td id="dcf-a-ev">--</td>
+              <td id="dcf-b-ev">--</td>
+              <td id="weighted-ev">--</td>
+            </tr>
+            <tr>
+              <td>Oman pääoman arvo (EUR t)</td>
+              <td id="dcf-a-equity">--</td>
+              <td id="dcf-b-equity">--</td>
+              <td id="weighted-equity">--</td>
+            </tr>
+            <tr class="row-total">
+              <td>Arvo per osake (EUR)</td>
+              <td id="dcf-a-per-share">--</td>
+              <td id="dcf-b-per-share">--</td>
+              <td id="weighted-per-share" style="color:var(--burgundy); font-weight:700;">--</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Arvonmäärityksen yhteenveto -->
+      <div class="control-group" style="margin-top:28px;">
+        <h4 class="group-title">Arvonmäärityksen yhteenveto</h4>
+        <div class="valuation-output">
+          <div class="output-row">
+            <span class="output-label">DCF A arvo/osake:</span>
+            <span class="output-value" id="dcf-a-value">EUR 0.00</span>
+          </div>
+          <div class="output-row">
+            <span class="output-label">DCF B arvo/osake:</span>
+            <span class="output-value" id="dcf-b-value">EUR 0.00</span>
+          </div>
+          <div class="output-row weighted">
+            <span class="output-label">Painotettu arvo:</span>
+            <span class="output-value" id="weighted-value">EUR 0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Oletusten yhteenveto -->
+      <div class="two-col-text" style="margin-top:32px;">
+        <div class="prose">
+          <h4>DCF A (optimistinen) keskeiset oletukset:</h4>
+          <ul>
+            <li>Liikevaihdon CAGR: <span id="dcf-a-assumpt-revenue">12%</span></li>
+            <li>EBIT-marginaali: <span id="dcf-a-assumpt-ebit">18%</span></li>
+            <li>WACC: <span id="dcf-a-assumpt-wacc">8,5%</span></li>
+            <li>Terminaalikasvu: <span id="dcf-a-assumpt-terminal">2,5%</span></li>
+          </ul>
+        </div>
+        <div class="prose">
+          <h4>DCF B (konservatiivinen) keskeiset oletukset:</h4>
+          <ul>
+            <li>Liikevaihdon CAGR: <span id="dcf-b-assumpt-revenue">8%</span></li>
+            <li>EBIT-marginaali: <span id="dcf-b-assumpt-ebit">14%</span></li>
+            <li>WACC: <span id="dcf-b-assumpt-wacc">9,5%</span></li>
+            <li>Terminaalikasvu: <span id="dcf-b-assumpt-terminal">2%</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+  <span id="appendices" class="anchor-target" aria-hidden="true"></span>
+
+  </main><!-- /main-content -->
+
+  </div><!-- /app-shell -->
+
+<!-- Application Logic -->
+<script src="app.js"></script>
+</body>
+</html>

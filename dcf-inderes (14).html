@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inderes DCF — Analyysi</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #4D0003;
+  --surface: #ffffff;
+  --surface2: #f5f0ea;
+  --border: #d0c8bc;
+  --border2: #b8b0a0;
+  --red: #4D0003;
+  --red-dark: #2d0002;
+  --red-light: #7a0a0a;
+  --red-pale: #eedcdc;
+  --red-pale2: #e0cccc;
+  --text: #111111;
+  --text-dim: #111111;
+  --text-muted: #222222;
+  --blue: #b8860b;
+  --blue-pale: #f5edcc;
+  --gold: #b8860b;
+  --gold-pale: #f5edcc;
+  --gold-mid: #d4a017;
+  --bear: #c04020;
+  --bear-pale: #f5ddd8;
+  --green: #1a6030;
+  --green-pale: #d5edd8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+* { text-decoration: none !important; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Franklin Gothic Book', 'Franklin Gothic Medium', 'ITC Franklin Gothic', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+
+
+
+.wrap {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 16px 20px 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── HEADER ── */
+header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 24px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 3px solid rgba(255,255,255,0.3);
+}
+
+.eyebrow {
+  font-size: 16px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+h1 {
+  font-family: 'Franklin Gothic Medium', 'Franklin Gothic Medium Cond', Arial Narrow, sans-serif;
+  font-size: 42px;
+  font-weight: normal;
+  color: #fff;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+h1 em { color: var(--red-light); font-style: italic; }
+
+.header-sub {
+  font-size: 17px;
+  color: rgba(255,255,255,0.8);
+  margin-top: 8px;
+}
+
+.target-box {
+  background: var(--red);
+  color: #fff;
+  padding: 16px 28px;
+  text-align: center;
+}
+
+.target-box .lbl {
+  font-size: 12px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  opacity: 0.9;
+  margin-bottom: 4px;
+}
+
+.target-box .price {
+  font-family: 'Franklin Gothic Medium', Arial Narrow, sans-serif;
+  font-size: 42px;
+  font-weight: normal;
+  line-height: 1;
+}
+
+.target-box .reco {
+  margin-top: 6px;
+  font-size: 16px;
+  background: rgba(255,255,255,0.2);
+  padding: 2px 12px;
+  letter-spacing: 2px;
+  display: inline-block;
+}
+
+/* ── SCENARIO CARDS ── */
+.scenario-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.sc-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid;
+  padding: 10px 16px;
+}
+
+.sc-card.base { border-top-color: #111; }
+.sc-card.risk { border-top-color: #111; }
+
+.sc-head {
+  position: relative;
+  text-align: center;
+  margin-bottom: 8px;
+  min-height: 24px;
+}
+
+.sc-lbl {
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  font-weight: 700;
+  display: block;
+  text-align: center;
+}
+.sc-lbl.base { color: var(--red-dark); }
+.sc-lbl.risk { color: var(--bear); }
+
+.sc-prob {
+  font-size: 12px;
+  background: var(--red-pale);
+  border: 1px solid var(--red-pale2);
+  padding: 2px 10px;
+  color: var(--red-dark);
+  font-weight: 700;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.sc-price {
+  font-family: 'Franklin Gothic Medium', Arial Narrow, sans-serif;
+  font-size: 28px;
+  font-weight: normal;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.sc-price.base { color: var(--red-dark); }
+.sc-price.risk { color: var(--bear); }
+
+.sc-up { font-size: 13px; font-weight: 700; }
+.up-pos { color: #111; }
+.up-neg { color: var(--bear); }
+
+/* ── WEIGHT BAR ── */
+.weight-panel {
+  background: var(--surface);
+  border: 1px solid #ccc;
+  border-top: 3px solid #111;
+  padding: 18px 24px;
+  margin-bottom: 8px;
+}
+
+.weight-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 20px;
+}
+
+.weight-lbl {
+  font-family: 'Franklin Gothic Medium', Arial Narrow, sans-serif;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.weight-lbl.base { color: var(--red); }
+.weight-lbl.risk { color: var(--bear); text-align: right; }
+
+.weight-mid {
+  text-align: center;
+  padding: 0 20px;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+.weight-mid .mid-lbl {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.weight-mid .mid-price {
+  font-family: 'Franklin Gothic Medium', Arial Narrow, sans-serif;
+  font-size: 30px;
+}
+
+.weight-mid .mid-up {
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.weight-bar {
+  margin-top: 14px;
+  height: 10px;
+  display: flex;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.weight-bar-base { background: #4D0003; transition: width 0.2s; }
+.weight-bar-risk { background: #111111; transition: width 0.2s; }
+
+/* ── BANNER ── */
+.banner {
+  background: rgba(255,255,255,0.92);
+  border-left: 4px solid #111;
+  padding: 6px 14px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* ── MAIN GRID ── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 370px 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+/* ── PANEL ── */
+.panel {
+  background: var(--surface);
+  border: 1px solid #ccc;
+  border-top: 3px solid #111;
+  padding: 12px 16px;
+}
+
+.panel-title {
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--red);
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--red-pale2);
+}
+
+/* ── SECTION LABEL ── */
+.sec-lbl {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--red-dark);
+  background: var(--red-pale);
+  border-left: 3px solid var(--red);
+  padding: 5px 10px;
+  margin-bottom: 6px;
+  margin-top: 2px;
+  display: block;
+}
+
+/* ── TOGGLES ── */
+.toggle-row { display: flex; gap: 6px; margin-bottom: 16px; }
+
+.toggle-btn {
+  flex: 1;
+  padding: 9px;
+  cursor: pointer;
+  font-family: 'Franklin Gothic Medium', Arial Narrow, sans-serif;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+
+.toggle-btn.base.active { background: var(--gold-pale); border-color: var(--gold); color: var(--gold); }
+.toggle-btn.risk.active { background: var(--bear-pale); border-color: var(--bear); color: var(--bear); }
+
+/* ── INPUTS ── */
+.input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.input-group { margin-bottom: 12px; }
+
+.input-lbl {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-bottom: 2px;
+  font-weight: 700;
+}
+
+.input-lbl .rep { color: var(--red); font-size: 11px; }
+.input-lbl .usr { color: var(--blue); font-size: 11px; }
+
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 3px;
+  background: var(--border2);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"].r-base::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  background: var(--gold);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(184,134,11,0.4);
+}
+
+input[type="range"].r-risk::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  background: var(--bear);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(192,64,32,0.4);
+}
+
+input[type="range"].r-weight::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  background: var(--red);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+input[type="number"] {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 10px;
+  width: 100%;
+  outline: none;
+}
+
+input[type="number"]:focus { border-color: var(--red); }
+
+.range-bounds {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.divider { border: none; border-top: 1px solid var(--red-pale2); margin: 14px 0; }
+
+/* ── COMPARISON TABLE ── */
+.comp-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.comp-tbl th {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 7px 10px;
+  background: var(--red-pale);
+  border-bottom: 2px solid var(--red-pale2);
+  text-align: right;
+  color: var(--text-dim);
+}
+.comp-tbl th:first-child { text-align: left; }
+.comp-tbl th.rc { color: var(--red); }
+.comp-tbl th.uc { color: var(--gold); }
+
+.comp-tbl td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  color: var(--text);
+}
+.comp-tbl td:first-child { text-align: left; color: var(--text-dim); font-size: 11px; }
+.comp-tbl td.rv { color: var(--red-dark); font-weight: 700; }
+.comp-tbl td.uv { color: var(--gold-mid); font-weight: 700; }
+.comp-tbl tr:hover td { background: var(--surface2); }
+.comp-tbl tr.sec-h td {
+  background: var(--red-pale);
+  color: var(--red-dark);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 4px 10px;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 9px;
+  padding: 1px 6px;
+  font-weight: 700;
+}
+.b-up { background: var(--green-pale); color: var(--green); }
+.b-dn { background: var(--bear-pale); color: var(--bear); }
+.b-eq { background: var(--surface2); color: var(--text-muted); }
+
+/* ── IMPLIED BOX ── */
+.implied-box {
+  background: var(--red-pale);
+  border: 1px solid var(--red-pale2);
+  border-left: 3px solid var(--red);
+  padding: 14px 16px;
+  margin-top: 6px;
+}
+
+.implied-box .ib-title {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--red);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.implied-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.ig-lbl { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+.ig-val {
+  font-family: 'Franklin Gothic Medium', Arial Narrow, sans-serif;
+  font-size: 22px;
+  font-weight: normal;
+  color: var(--red-dark);
+}
+.ig-sub { font-size: 11px; color: var(--text-muted); }
+
+/* ── CF TABLE ── */
+.cf-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.cf-tbl th {
+  color: var(--text-dim);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  text-align: right;
+  border-bottom: 2px solid var(--red);
+  font-size: 11px;
+  background: var(--red-pale);
+}
+.cf-tbl th:first-child { text-align: left; }
+.cf-tbl td {
+  padding: 6px 10px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 700;
+}
+.cf-tbl td:first-child { text-align: left; color: #111; font-weight: 600; }
+.cf-tbl tr.hl td { font-weight: 700; color: #111; background: transparent; }
+
+/* ── BOTTOM GRID ── */
+.bot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+/* ── ANNO ── */
+.anno {
+  background: var(--red-pale);
+  border-left: 3px solid var(--red);
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+/* ── LEGEND ── */
+.legend { display: flex; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
+.leg-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-dim); font-weight: 700; }
+.leg-dot { width: 12px; height: 12px; }
+/* ── SERIES TOGGLE BUTTONS ── */
+.series-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  cursor: pointer;
+  font-family: 'Franklin Gothic Book', Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  border: 2px solid transparent;
+  background: var(--surface2);
+  color: var(--text-muted);
+  transition: all 0.15s;
+  border-radius: 3px;
+  opacity: 0.5;
+}
+.series-btn.active {
+  background: white;
+  border-color: var(--c, #333);
+  color: var(--text);
+  opacity: 1;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.series-dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ── DISCLAIMER MODAL ── */
+#disclaimer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.62);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.32s ease;
+  pointer-events: none;
+}
+#disclaimer-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+#disclaimer-modal {
+  background: #fff;
+  border-left: 5px solid #4D0003;
+  border-radius: 2px;
+  max-width: 520px;
+  width: calc(100% - 40px);
+  padding: 32px 32px 26px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.28);
+  transform: translateY(12px);
+  transition: transform 0.32s ease;
+}
+#disclaimer-overlay.visible #disclaimer-modal {
+  transform: translateY(0);
+}
+#disclaimer-modal h2 {
+  font-family: 'Franklin Gothic Medium', Arial Narrow, sans-serif;
+  font-size: 20px;
+  font-weight: normal;
+  color: #4D0003;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  line-height: 1.2;
+}
+#disclaimer-modal p {
+  font-size: 14px;
+  color: #111;
+  line-height: 1.72;
+  margin-bottom: 24px;
+}
+#disclaimer-modal button {
+  background: #4D0003;
+  color: #fff;
+  border: none;
+  padding: 11px 28px;
+  font-family: 'Franklin Gothic Medium', Arial Narrow, sans-serif;
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#disclaimer-modal button:hover { background: #6a0005; }
+
+/* ── FOOTER ── */
+.site-footer {
+  text-align: right;
+  padding: 10px 20px 18px;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+.site-footer a {
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  text-decoration: none !important;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+.site-footer a:hover { color: rgba(255,255,255,0.9); }
+</style>
+</head>
+<body>
+
+<!-- DISCLAIMER MODAL -->
+<div id="disclaimer-overlay" role="dialog" aria-modal="true" aria-labelledby="disclaimer-title">
+  <div id="disclaimer-modal">
+    <h2 id="disclaimer-title">Tietoa mallista</h2>
+    <p>Interaktiivisen valuaatiomallin tarkoitus on toimia analyysin tukena. Kyseessä on MVP-vaiheessa (minimum viable product) oleva malli, ja se voi kohtuullisella todennäköisyydellä olla virheellinen. Student Coverage -analyytikot opiskelevat rahoitusta, eivät tietojenkäsittelytiedettä.</p>
+    <button id="disclaimer-btn" onclick="closeDisclaimer()">Ymmärrän</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div>
+    <div class="eyebrow"><strong>Student Coverage</strong> · HEL: INDERES · 18.2.2026</div>
+    <h1>Inderes</h1>
+    <div class="header-sub">DCF-malli · Skenaariovertailu · Herkkyysanalyysi &nbsp;|&nbsp; Raportin oletukset vs. käyttäjän oletukset</div>
+  </div>
+  <div style="display:flex; align-items:center; gap:18px;">
+    <div style="text-align:center;">
+      <img src="data:image/jpeg;base64,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" alt="Matias Sainio"
+        style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.5);display:block;margin:0 auto 6px;">
+      <div style="font-size:14px;font-weight:700;color:#fff;">Matias Sainio</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);">Analyytikko</div>
+    </div>
+    <div class="target-box">
+      <div class="lbl">Analyytikon tavoitehinta</div>
+      <div class="price">19,70 €</div>
+      <div class="reco">BUY · +27 %</div>
+    </div>
+  </div>
+</header>
+
+<!-- SCENARIO CARDS -->
+<div class="scenario-row">
+  <div class="sc-card base">
+    <div class="sc-head">
+      <div class="sc-lbl base">Base — Perusskenaario</div>
+      <div class="sc-prob base-prob-lbl">Paino 75 %</div>
+    </div>
+    <div class="sc-price base" id="base-display-price">22,86 €</div>
+    <div class="sc-up up-pos" id="base-display-up">+47,0 % vs. kurssi (15,55 €)</div>
+  </div>
+  <div class="sc-card risk">
+    <div class="sc-head">
+      <div class="sc-lbl risk">Risk — IPO-elvytys viivästyy</div>
+      <div class="sc-prob risk-prob-lbl">Paino 25 %</div>
+    </div>
+    <div class="sc-price risk" id="risk-display-price">10,40 €</div>
+    <div class="sc-up up-neg" id="risk-display-up">−33,0 % vs. kurssi (15,55 €)</div>
+  </div>
+</div>
+
+<!-- WEIGHT PANEL WITH GAUGES -->
+<div class="weight-panel">
+  <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px;">
+
+    <!-- Base gauge -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;color:var(--red);">Base-paino</div>
+      <div style="position:relative;width:180px;height:104px;">
+        <canvas id="gauge-base" width="180" height="104"></canvas>
+        <span id="bw-disp" style="display:none">75 %</span>
+      </div>
+    </div>
+
+    <!-- Center: weighted price + slider -->
+    <div class="weight-mid" style="padding:0 24px;border-left:1px solid var(--border);border-right:1px solid var(--border);text-align:center;">
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Painotettu tavoite</div>
+      <div id="w-price" style="font-family:'Franklin Gothic Medium',Arial Narrow,sans-serif;font-size:28px;color:var(--red-dark);line-height:1;">—</div>
+      <div id="w-up" style="font-size:12px;font-weight:700;margin-top:2px;color:#111;">vs. 15,55 €</div>
+      <div style="margin-top:10px;">
+        <input type="range" class="r-weight" id="base-weight" min="10" max="95" value="75" step="5"
+          oninput="updateWeight(); calculate()"
+          style="width:140px;display:block;margin:0 auto;">
+        <div style="display:flex;justify-content:space-between;width:140px;margin:3px auto 0;font-size:10px;color:#555;">
+          <span>10 %</span><span>Base-paino</span><span>95 %</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk gauge -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;color:var(--bear);">Risk-paino</div>
+      <div style="position:relative;width:180px;height:104px;">
+        <canvas id="gauge-risk" width="180" height="104"></canvas>
+        <span id="rw-disp" style="display:none">25 %</span>
+      </div>
+    </div>
+
+  </div>
+  <!-- Bar -->
+  <div class="weight-bar" style="margin-top:16px;height:8px;">
+    <div class="weight-bar-base" id="wb-base" style="width:75%"></div>
+    <div class="weight-bar-risk" id="wb-risk" style="width:25%"></div>
+  </div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="main-grid">
+
+  <!-- LEFT: INPUTS -->
+  <div class="panel">
+    <div class="panel-title">Parametrit &amp; Vertailu</div>
+
+    <div class="toggle-row">
+      <button class="toggle-btn base active" id="btn-base" onclick="setScen('base')">Base</button>
+      <button class="toggle-btn risk" id="btn-risk" onclick="setScen('risk')">Risk</button>
+    </div>
+
+    <span class="sec-lbl">Yrityksen perustiedot</span>
+    <div class="input-row">
+      <div class="input-group">
+        <div class="input-lbl"><span>Kurssi (€)</span></div>
+        <input type="number" id="current-price" value="15.55" step="0.1" oninput="calculate()">
+      </div>
+      <div class="input-group">
+        <div class="input-lbl"><span>Osakkeet (milj.)</span></div>
+        <input type="number" id="shares" value="1.72" step="0.01" oninput="calculate()">
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <div class="input-lbl"><span>FCF 2025 (M€)</span></div>
+        <input type="number" id="fcf0" value="1.3" step="0.1" oninput="calculate()">
+      </div>
+      <div class="input-group">
+        <div class="input-lbl"><span>Nettovelka (M€)</span></div>
+        <input type="number" id="net-debt" value="-0.5" step="0.1" oninput="calculate()">
+      </div>
+    </div>
+
+    <hr class="divider">
+    <span class="sec-lbl" id="scen-lbl">Base-skenaarion parametrit</span>
+
+    <div id="base-params">
+      <div class="input-group">
+        <div class="input-lbl"><span>FCF kasvu v. 1–6</span><span class="rep">Raportti: ~ 25 %</span></div>
+        <input type="range" class="r-base" id="base-g1" min="5" max="45" value="25" step="0.5" oninput="syncVal('base-g1','bg1v',' %'); calculate()">
+        <div class="range-bounds"><span>5 %</span><span id="bg1v">25,0 %</span><span>45 %</span></div>
+      </div>
+      <div class="input-group">
+        <div class="input-lbl"><span>WACC</span><span class="rep">Raportti: 9,4 %</span></div>
+        <input type="range" class="r-base" id="base-wacc" min="6" max="14" value="9.4" step="0.1" oninput="syncVal('base-wacc','bwv',' %'); calculate()">
+        <div class="range-bounds"><span>6 %</span><span id="bwv">9,4 %</span><span>14 %</span></div>
+      </div>
+      <div class="input-group">
+        <div class="input-lbl"><span>Terminaalikasvu</span><span class="rep">Raportti: 1,0 %</span></div>
+        <div style="display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center;">
+          <select id="base-tg-sel" onchange="document.getElementById('base-tg').value=this.value; syncVal('base-tg','btv',' %'); calculate()"
+            style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;font-weight:700;padding:7px 10px;cursor:pointer;">
+            <option value="0">0,0 % — Ei kasvua</option>
+            <option value="0.5">0,5 % — Matala</option>
+            <option value="1.0" selected>1,0 % — Raportti ✦</option>
+            <option value="1.5">1,5 % — Kohtalainen</option>
+            <option value="2.0">2,0 % — Korkea</option>
+            <option value="2.5">2,5 % — Inflaatio</option>
+            <option value="2.5">2,5 % — Aggressiivinen inflaatio</option>
+          </select>
+          <span id="btv" style="font-weight:700;color:var(--gold);font-size:14px;min-width:48px;text-align:right;">1,0 %</span>
+        </div>
+        <input type="range" id="base-tg" min="0" max="2.5" value="1.0" step="0.5"
+          oninput="document.getElementById('base-tg-sel').value=this.value; syncVal('base-tg','btv',' %'); calculate()"
+          style="margin-top:6px;">
+        <div class="range-bounds"><span>0 %</span><span>3 %</span></div>
+      </div>
+    </div>
+
+    <div id="risk-params" style="display:none">
+      <div class="input-group">
+        <div class="input-lbl"><span>FCF kasvu v. 1–6</span><span class="rep">Raportti: ~ 8 %</span></div>
+        <input type="range" class="r-risk" id="risk-g1" min="-5" max="20" value="8" step="0.5" oninput="syncVal('risk-g1','rg1v',' %'); calculate()">
+        <div class="range-bounds"><span>-5 %</span><span id="rg1v">8,0 %</span><span>20 %</span></div>
+      </div>
+      <div class="input-group">
+        <div class="input-lbl"><span>WACC</span><span class="rep">Raportti: 9,4 %</span></div>
+        <input type="range" class="r-risk" id="risk-wacc" min="6" max="14" value="9.4" step="0.1" oninput="syncVal('risk-wacc','rwv',' %'); calculate()">
+        <div class="range-bounds"><span>6 %</span><span id="rwv">9,4 %</span><span>14 %</span></div>
+      </div>
+      <div class="input-group">
+        <div class="input-lbl"><span>Terminaalikasvu</span><span class="rep">Raportti: 0,0 %</span></div>
+        <div style="display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center;">
+          <select id="risk-tg-sel" onchange="document.getElementById('risk-tg').value=this.value; syncVal('risk-tg','rtv',' %'); calculate()"
+            style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;font-weight:700;padding:7px 10px;cursor:pointer;">
+            <option value="0" selected>0,0 % — Raportti ✦</option>
+            <option value="0.5">0,5 % — Matala</option>
+            <option value="1.0">1,0 % — Kohtalainen</option>
+            <option value="1.5">1,5 % — Korkea</option>
+            <option value="2.0">2,0 % — Aggressiivinen</option>
+          </select>
+          <span id="rtv" style="font-weight:700;color:var(--bear);font-size:14px;min-width:48px;text-align:right;">0,0 %</span>
+        </div>
+        <input type="range" id="risk-tg" min="0" max="2" value="0" step="0.5"
+          oninput="document.getElementById('risk-tg-sel').value=this.value; syncVal('risk-tg','rtv',' %'); calculate()"
+          style="margin-top:6px;">
+        <div class="range-bounds"><span>0 %</span><span>2 %</span></div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <span class="sec-lbl">Sinun vs. Raportti</span>
+    <table class="comp-tbl" id="comp-tbl"></table>
+
+    <div class="implied-box">
+      <div class="ib-title">Painotettu tavoitehinta</div>
+      <div class="implied-grid">
+        <div>
+          <div class="ig-lbl">Raportti (75/25)</div>
+          <div class="ig-val" style="color:var(--red)">19,70 €</div>
+          <div class="ig-sub">alkuperäinen</div>
+        </div>
+        <div>
+          <div class="ig-lbl">Sinun mallistasi</div>
+          <div class="ig-val" id="ib-user">—</div>
+          <div class="ig-sub">sinun paino</div>
+        </div>
+        <div>
+          <div class="ig-lbl">Ero</div>
+          <div class="ig-val" id="ib-diff">—</div>
+          <div class="ig-sub">vs. raportti</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: CHARTS -->
+  <div class="panel">
+    <div class="panel-title">FCF-ennuste: Raportti vs. Sinun mallistasi</div>
+    <div style="position:relative; height:200px">
+      <canvas id="fcfChart"></canvas>
+    </div>
+    <hr class="divider" style="margin:6px 0">
+    <div class="panel-title" style="margin-top:4px;margin-bottom:6px;">Arvon jakauma — PV kassavirrat + terminaali</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;">
+      <div style="position:relative;height:260px"><canvas id="valChart-rbase"></canvas></div>
+      <div style="position:relative;height:260px"><canvas id="valChart-base"></canvas></div>
+      <div style="position:relative;height:260px"><canvas id="valChart-rrisk"></canvas></div>
+      <div style="position:relative;height:260px"><canvas id="valChart-risk"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- CF TABLE -->
+<div class="panel" style="margin-bottom:10px">
+  <div class="panel-title">Kassavirtataulukko — Raportti vs. Sinun mallistasi (Base-skenaario)</div>
+  <div style="overflow-x:auto">
+    <table class="cf-tbl" id="cf-tbl"></table>
+  </div>
+</div>
+
+<!-- SENSITIVITY CHARTS -->
+<div class="bot-grid">
+  <div class="panel">
+    <div class="panel-title">Herkkyys — Base DCF (€/osake) · WACC vs. terminaalikasvu</div>
+    <div style="position:relative;height:220px"><canvas id="sens-base"></canvas></div>
+    <div class="anno">Kukin viiva = eri terminaalikasvu · Pystyviiva = raportin WACC 9,4 % · Katkoviiva = kurssitaso 15,55 €</div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">Herkkyys — Risk DCF (€/osake) · WACC vs. terminaalikasvu</div>
+    <div style="position:relative;height:220px"><canvas id="sens-risk"></canvas></div>
+    <div class="anno">Kukin viiva = eri terminaalikasvu · Pystyviiva = raportin WACC 9,4 % · Katkoviiva = kurssitaso 15,55 €</div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <a onclick="openDisclaimer()">Näytä disclaimer</a>
+</footer>
+
+
+<script>
+// ── CONSTANTS (report values) ──
+const R_BASE_FCFS = [1.3,1.7,2.6,2.9,3.3,4.0];
+const R_RISK_FCFS = [1.3,1.9,1.9,1.8,1.8,1.5];
+const R_WACC = 0.094, R_BASE_TG = 0.01, R_RISK_TG = 0.00;
+const R_SHARES = 1.72, R_NETDEBT = -0.5;
+
+let fcfChart, valBaseChart, valRiskChart, valRBaseChart, valRRiskChart, sensBaseChart, sensRiskChart;
+
+// ── NUMBER FORMATTING (Finnish) ──
+const fi = (v, d=2) => v.toFixed(d).replace('.', ',');
+const eur = (v, d=2) => fi(v, d) + ' €';
+const pct = (v, d=1) => fi(v, d) + ' %';
+const sign = (v, d=2) => (v>=0?'+':'')+fi(v,d)+' €';
+
+// ── WEIGHT / GAUGE ──
+// Canvas angle reference (y-axis points DOWN):
+//   0 = right, π/2 = bottom, π = left, 3π/2 = top, 2π = right again
+//   anticlockwise=false → clockwise on screen (angles increase)
+// The gauge is the TOP semicircle: arc from π to 2π, anticlockwise=false
+//   Left foot  → angle π   (left,  y=cy)
+//   Right foot → angle 2π  (right, y=cy)  ← both feet at same y: no tilt ever
+// Base (L→R): fill from π          to π + (v/100)·π
+// Risk (R→L): fill from (2-v/100)·π to 2π
+//   Mirror geometry, same anticlockwise=false, guaranteed symmetric.
+function drawGauge(canvasId, percent, isRisk) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  // ── Canvas sizing — resets completely each call, no DPI drift ──
+  const W = 180, H = 104;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // safe: resets entire transform matrix
+  ctx.clearRect(0, 0, W, H);
+
+  // ── Shared geometry (identical for both gauges) ──
+  const pad   = 12;           // equal left + right padding → cx is true center
+  const cx    = W / 2;        // 90px — horizontal symmetry axis
+  const cy    = H - 4;        // arc pivot; feet at y=cy on both sides (level)
+  const lw    = 20;           // gauge band thickness
+  const rOuter = cx - pad;    // 78px outer radius
+  const rMid   = rOuter - lw / 2; // 68px centreline (used for stroke)
+  const rInner = rOuter - lw; // 58px inner radius
+
+  // ── Colours ──
+  const FILLED = '#4D0003';
+  const TRACK  = '#D9D9D9';
+  const BORDER = 'rgba(0,0,0,0.32)';
+
+  // Clamp to [0, 100]
+  const v = Math.min(100, Math.max(0, +percent));
+
+  // ── Step 1: Draw track (full 180°, both gauges identical) ──
+  ctx.beginPath();
+  ctx.arc(cx, cy, rMid, Math.PI, Math.PI * 2, false);
+  ctx.strokeStyle = TRACK;
+  ctx.lineWidth   = lw;
+  ctx.lineCap     = 'butt';
+  ctx.stroke();
+
+  // ── Step 2: Draw filled arc ──
+  if (v > 0) {
+    let aStart, aEnd;
+    if (!isRisk) {
+      // BASE: left → right
+      // Starts at left foot (π), sweeps clockwise by v% of π
+      aStart = Math.PI;
+      aEnd   = Math.PI + Math.PI * (v / 100);
+    } else {
+      // RISK: right → left
+      // Ends at right foot (2π), starts v% of π before it
+      // At v=100: aStart=π, aEnd=2π → full arc (mirrors Base at 100%)
+      // At v=25 : aStart=7π/4, aEnd=2π → rightmost 25%
+      aStart = Math.PI * (2 - v / 100);
+      aEnd   = Math.PI * 2;
+    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, rMid, aStart, aEnd, false);
+    ctx.strokeStyle = FILLED;
+    ctx.lineWidth   = lw;
+    ctx.lineCap     = 'butt';
+    ctx.stroke();
+  }
+
+  // ── Step 3: Outer + inner 1px border lines (full 180° arc outline) ──
+  for (const r of [rOuter, rInner]) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, Math.PI, Math.PI * 2, false);
+    ctx.strokeStyle = BORDER;
+    ctx.lineWidth   = 1;
+    ctx.lineCap     = 'butt';
+    ctx.stroke();
+  }
+
+  // ── Step 4: Percentage label drawn on canvas ──
+  // Positioned horizontally centred (cx) and vertically at the visual
+  // centroid of the semicircular interior: ≈ cy − rMid × 0.42
+  // "Slightly lower than the geometric centre" means 0.38–0.42 (not 0.5).
+  const labelY = cy - rMid * 0.42;
+  ctx.fillStyle    = '#111';
+  ctx.font         = "bold 26px 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif";
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(Math.round(v) + ' %', cx, labelY);
+}
+
+function updateWeight() {
+  const bw = +document.getElementById('base-weight').value;
+  const rw  = 100 - bw;
+  // Update auxiliary displays
+  document.getElementById('bw-disp').textContent = bw + ' %';
+  document.getElementById('rw-disp').textContent = rw + ' %';
+  // Update weight bar widths
+  document.getElementById('wb-base').style.width = bw + '%';
+  document.getElementById('wb-risk').style.width = rw + '%';
+  // Redraw BOTH gauges immediately on every slider change
+  drawGauge('gauge-base', bw,  false);
+  drawGauge('gauge-risk',  rw, true);
+}
+
+function getW() {
+  const bw = +document.getElementById('base-weight').value / 100;
+  return { b: bw, r: 1-bw };
+}
+
+// ── FCF SERIES TOGGLE ──
+function toggleFCFSeries(idx, btn) {
+  btn.classList.toggle('active');
+  if (fcfChart) {
+    const ds = fcfChart.data.datasets[idx];
+    ds.hidden = !ds.hidden;
+    fcfChart.update();
+  }
+}
+
+// ── SCENARIO TOGGLE ──
+function setScen(s) {
+  document.getElementById('btn-base').classList.toggle('active', s==='base');
+  document.getElementById('btn-risk').classList.toggle('active', s==='risk');
+  document.getElementById('base-params').style.display = s==='base'?'block':'none';
+  document.getElementById('risk-params').style.display = s==='risk'?'block':'none';
+  document.getElementById('scen-lbl').textContent = s==='base' ? 'Base-skenaarion parametrit' : 'Risk-skenaarion parametrit';
+}
+
+// ── SLIDER SYNC ──
+function syncVal(id, dispId, suffix) {
+  document.getElementById(dispId).textContent = fi(+document.getElementById(id).value, 1) + suffix;
+}
+
+// ── INPUTS ──
+function inp() {
+  return {
+    price: +document.getElementById('current-price').value || 15.55,
+    shares: +document.getElementById('shares').value || 1.72,
+    fcf0: +document.getElementById('fcf0').value || 1.3,
+    nd: +document.getElementById('net-debt').value || -0.5,
+    base: {
+      g: +document.getElementById('base-g1').value/100,
+      w: +document.getElementById('base-wacc').value/100,
+      t: +document.getElementById('base-tg').value/100,
+    },
+    risk: {
+      g: +document.getElementById('risk-g1').value/100,
+      w: +document.getElementById('risk-wacc').value/100,
+      t: +document.getElementById('risk-tg').value/100,
+    }
+  };
+}
+
+// ── DCF ──
+function dcfGrowth(fcf0, g, wacc, tg, yrs, sh, nd) {
+  const fcfs=[], pvcfs=[];
+  let fcf=fcf0, tot=0;
+  for (let y=1; y<=yrs; y++) {
+    fcf *= (1+g);
+    const pv = fcf / Math.pow(1+wacc, y);
+    fcfs.push(fcf); pvcfs.push(pv); tot += pv;
+  }
+  const tv = wacc>tg ? fcf*(1+tg)/(wacc-tg) : 0;
+  const pvTV = tv / Math.pow(1+wacc, yrs);
+  const eq = tot + pvTV - nd;
+  return { fcfs, pvcfs, tot, pvTV, eq, price: eq/sh };
+}
+
+function dcfFCFs(arr, wacc, tg, sh, nd) {
+  const pvcfs=[]; let tot=0;
+  arr.forEach((v,i) => { const pv=v/Math.pow(1+wacc,i+1); pvcfs.push(pv); tot+=pv; });
+  const tv = wacc>tg ? arr[arr.length-1]*(1+tg)/(wacc-tg) : 0;
+  const pvTV = tv / Math.pow(1+wacc, arr.length);
+  const eq = tot + pvTV - nd;
+  return { fcfs:arr, pvcfs, tot, pvTV, eq, price: eq/sh };
+}
+
+// ── DIFF BADGE ──
+function diff(u, r) {
+  const d = u-r, p = Math.abs(d/r*100);
+  if (Math.abs(d)<0.005) return '<span class="badge b-eq">sama</span>';
+  return d>0 ? `<span class="badge b-up">+${fi(p,0)} %</span>` : `<span class="badge b-dn">-${fi(p,0)} %</span>`;
+}
+
+// ── MAIN CALCULATE ──
+function calculate() {
+  const I = inp(), W = getW();
+  const uB = dcfGrowth(I.fcf0, I.base.g, I.base.w, I.base.t, 6, I.shares, I.nd);
+  const uR = dcfGrowth(I.fcf0, I.risk.g, I.risk.w, I.risk.t, 6, I.shares, I.nd);
+  const rB = dcfFCFs(R_BASE_FCFS, R_WACC, R_BASE_TG, R_SHARES, R_NETDEBT);
+  const rR = dcfFCFs(R_RISK_FCFS, R_WACC, R_RISK_TG, R_SHARES, R_NETDEBT);
+
+  // Scenario cards
+  const fmt_up = (p, c) => {
+    const u = (p/c-1)*100;
+    return (u>=0?'+':'')+fi(u,1)+' % vs. kurssi ('+eur(c)+')';
+  };
+  document.getElementById('base-display-price').textContent = eur(uB.price);
+  const bUp = document.getElementById('base-display-up');
+  bUp.textContent = fmt_up(uB.price, I.price);
+  bUp.className = 'sc-up '+(uB.price>=I.price?'up-pos':'up-neg');
+  document.getElementById('risk-display-price').textContent = eur(uR.price);
+  const rUp = document.getElementById('risk-display-up');
+  rUp.textContent = fmt_up(uR.price, I.price);
+  rUp.className = 'sc-up '+(uR.price>=I.price?'up-pos':'up-neg');
+
+  // Prob labels
+  document.querySelectorAll('.base-prob-lbl').forEach(e=>e.textContent='Paino '+fi(W.b*100,0)+' %');
+  document.querySelectorAll('.risk-prob-lbl').forEach(e=>e.textContent='Paino '+fi(W.r*100,0)+' %');
+
+  // Weighted
+  const uW = W.b*uB.price + W.r*uR.price;
+  const rW = W.b*22.86 + W.r*10.40;
+  const dW = uW - rW;
+  const wp = document.getElementById('w-price');
+  wp.textContent = eur(uW);
+  wp.style.color = uW>=I.price?'var(--green)':'var(--bear)';
+  const wu = document.getElementById('w-up');
+  const wup = (uW/I.price-1)*100;
+  wu.textContent = (wup>=0?'+':'')+fi(wup,1)+' % vs. '+eur(I.price);
+  wu.style.color = wup>=0?'var(--green)':'var(--bear)';
+  const ibU = document.getElementById('ib-user');
+  ibU.textContent = eur(uW);
+  ibU.style.color = uW>=rW?'var(--green)':'var(--bear)';
+  const ibD = document.getElementById('ib-diff');
+  ibD.textContent = sign(dW);
+  ibD.style.color = dW>=0?'var(--green)':'var(--bear)';
+
+  // Comparison table
+  let ct = `<thead><tr>
+    <th style="text-align:left">Parametri</th><th class="rc">Raportti</th><th class="uc">Sinä</th><th>Ero</th>
+  </tr></thead><tbody>
+    <tr class="sec-h"><td colspan="4">Base-skenaario</td></tr>
+    <tr><td>FCF kasvu</td><td class="rv">~ 25 %</td><td class="uv">${pct(I.base.g*100)}</td><td>${diff(I.base.g,0.25)}</td></tr>
+    <tr><td>WACC</td><td class="rv">9,4 %</td><td class="uv">${pct(I.base.w*100)}</td><td>${diff(I.base.w,0.094)}</td></tr>
+    <tr><td>Term. kasvu</td><td class="rv">1,0 %</td><td class="uv">${pct(I.base.t*100)}</td><td>${diff(I.base.t,0.010)}</td></tr>
+    <tr><td>DCF arvo</td><td class="rv">22,86 €</td><td class="uv">${eur(uB.price)}</td><td>${diff(uB.price,22.86)}</td></tr>
+    <tr class="sec-h"><td colspan="4">Risk-skenaario</td></tr>
+    <tr><td>FCF kasvu</td><td class="rv">~ 8 %</td><td class="uv">${pct(I.risk.g*100)}</td><td>${diff(I.risk.g,0.08)}</td></tr>
+    <tr><td>WACC</td><td class="rv">9,4 %</td><td class="uv">${pct(I.risk.w*100)}</td><td>${diff(I.risk.w,0.094)}</td></tr>
+    <tr><td>Term. kasvu</td><td class="rv">0,0 %</td><td class="uv">${pct(I.risk.t*100)}</td><td>${diff(I.risk.t,0.00)}</td></tr>
+    <tr><td>DCF arvo</td><td class="rv">10,40 €</td><td class="uv">${eur(uR.price)}</td><td>${diff(uR.price,10.40)}</td></tr>
+    <tr class="sec-h"><td colspan="4">Painotettu tulos</td></tr>
+    <tr><td>Base-paino</td><td class="rv">75 %</td><td class="uv">${pct(W.b*100,0)}</td><td></td></tr>
+    <tr><td>Tavoitehinta</td><td class="rv">19,70 €</td>
+      <td class="uv" style="color:${uW>=I.price?'var(--green)':'var(--bear)'}">${eur(uW)}</td>
+      <td>${diff(uW,19.70)}</td></tr>
+  </tbody>`;
+  document.getElementById('comp-tbl').innerHTML = ct;
+
+  // CF Table
+  const yrs_lbl = ['2025','2026e','2027e','2028e','2029e','2030e'];
+  let cf = `<thead><tr><th>MEUR</th>${yrs_lbl.map(l=>`<th>${l}</th>`).join('')}<th>TERM</th></tr></thead><tbody>`;
+  cf += `<tr><td>Raportti Base FCF</td>${R_BASE_FCFS.map(v=>`<td>${fi(v,1)}</td>`).join('')}<td>${fi(R_BASE_FCFS[5]*(1+R_BASE_TG),1)}</td></tr>`;
+  cf += `<tr><td>Sinun Base FCF</td>${uB.fcfs.map(v=>`<td style="color:var(--blue)">${fi(v,1)}</td>`).join('')}<td style="color:var(--blue)">${fi(uB.fcfs[5]*(1+I.base.t),1)}</td></tr>`;
+  cf += `<tr><td>Raportti Risk FCF</td>${R_RISK_FCFS.map(v=>`<td>${fi(v,1)}</td>`).join('')}<td>${fi(R_RISK_FCFS[5]*(1+R_RISK_TG),1)}</td></tr>`;
+  cf += `<tr><td>Sinun Risk FCF</td>${uR.fcfs.map(v=>`<td>${fi(v,1)}</td>`).join('')}<td>${fi(uR.fcfs[5]*(1+I.risk.t),1)}</td></tr>`;
+  cf += `<tr class="hl"><td>Rep. Base Disk. FCF</td>${rB.pvcfs.map(v=>`<td>${fi(v,1)}</td>`).join('')}<td>${fi(rB.pvTV,1)}</td></tr>`;
+  cf += `<tr class="hl"><td>Sinun Base Disk. FCF</td>${uB.pvcfs.map(v=>`<td>${fi(v,1)}</td>`).join('')}<td>${fi(uB.pvTV,1)}</td></tr>`;
+  cf += '</tbody>';
+  document.getElementById('cf-tbl').innerHTML = cf;
+
+  // Charts
+  updateFCF(uB.fcfs, uR.fcfs);
+  updateVal(uB, uR, rB, rR);
+  updateSens(I.fcf0, I.base.g, I.base.t, I.shares, I.nd, I.price, 'sens-base', false);
+  updateSens(I.fcf0, I.risk.g, I.risk.t, I.shares, I.nd, I.price, 'sens-risk', true);
+}
+
+// ── CHARTS ──
+function updateFCF(uBf, uRf) {
+  const ctx = document.getElementById('fcfChart').getContext('2d');
+  if (fcfChart) fcfChart.destroy();
+  const font = { family: "'Franklin Gothic Book', Arial, sans-serif", size: 11 };
+  const labels = ['2025','2026e','2027e','2028e','2029e','2030e'];
+  fcfChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [
+      { label:'Raportti Base', data:R_BASE_FCFS, backgroundColor:'rgba(77,0,3,0.80)', borderColor:'#4D0003', borderWidth:2, borderRadius:2, borderSkipped:false },
+      { label:'Sinun Base',    data:uBf,         backgroundColor:'rgba(0,0,0,0)',         borderColor:'#4D0003', borderWidth:3, borderRadius:2, borderSkipped:false },
+      { label:'Raportti Risk', data:R_RISK_FCFS, backgroundColor:'rgba(184,134,11,0.72)', borderColor:'#b8860b', borderWidth:2, borderRadius:2, borderSkipped:false },
+      { label:'Sinun Risk',    data:uRf,         backgroundColor:'rgba(0,0,0,0)',          borderColor:'#b8860b', borderWidth:3, borderRadius:2, borderSkipped:false },
+    ]},
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: {
+        legend:{ labels:{ color:'#111', font, boxWidth:10 }},
+        tooltip:{ backgroundColor:'#fff', borderColor:'#d0c8bc', borderWidth:1, titleColor:'#111', bodyColor:'#111',
+          callbacks:{ label: c => ` ${c.dataset.label}: ${fi(c.raw,2)} M€` }}
+      },
+      scales: {
+        x:{ ticks:{ color:'#111', font }, grid:{ color:'#e8e2da' }},
+        y:{ ticks:{ color:'#111', font, callback:v=>fi(v,1)+' M€' }, grid:{ color:'#e8e2da' }}
+      }
+    }
+  });
+}
+
+function updateVal(uB, uR, rB, rR) {
+  const font = { family:"'Franklin Gothic Book', Arial, sans-serif", size:11 };
+  const makeDonut = (canvasId, label, tot, pvTV, col1, col2, existing) => {
+    if (existing) existing.destroy();
+    const el = document.getElementById(canvasId);
+    if (!el) return null;
+    const ctx = el.getContext('2d');
+    return new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['PV Kassavirrat', 'PV Terminaali'],
+        datasets: [{ data:[tot, pvTV],
+          backgroundColor:[col1, col2], borderColor:'#f5f5f5', borderWidth:2, hoverOffset:6 }]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false, cutout:'60%',
+        plugins: {
+          legend:{ position:'bottom', labels:{ color:'#111', font, boxWidth:10, padding:6 }},
+          tooltip:{ backgroundColor:'#fff', borderColor:'#d0c8bc', borderWidth:1, titleColor:'#111', bodyColor:'#111',
+            callbacks:{ label: c => {
+              const tot2 = c.dataset.data.reduce((a,b)=>a+b,0);
+              return ` ${c.label}: ${fi(c.raw,1)} M€ (${(c.raw/tot2*100).toFixed(0)} %)`;
+            }}
+          },
+          title:{ display:true, text:label, color:'#111', font:{...font,size:12,weight:'bold'}, padding:{bottom:4} }
+        }
+      }
+    });
+  };
+  // Raportti Base — dark red
+  valRBaseChart = makeDonut('valChart-rbase','Rep. Base', rB.tot, rB.pvTV,
+    'rgba(77,0,3,0.88)','rgba(77,0,3,0.25)', valRBaseChart);
+  // Sinun Base — gold
+  valBaseChart = makeDonut('valChart-base','Sinun Base', uB.tot, uB.pvTV,
+    'rgba(184,134,11,0.88)','rgba(184,134,11,0.28)', valBaseChart);
+  // Raportti Risk — burnt orange
+  valRRiskChart = makeDonut('valChart-rrisk','Rep. Risk', rR.tot, rR.pvTV,
+    'rgba(192,64,32,0.88)','rgba(192,64,32,0.25)', valRRiskChart);
+  // Sinun Risk — deep amber
+  valRiskChart = makeDonut('valChart-risk','Sinun Risk', uR.tot, uR.pvTV,
+    'rgba(160,60,20,0.6)','rgba(160,60,20,0.2)', valRiskChart);
+}
+
+// ── SENSITIVITY CHARTS ──
+function updateSens(fcf0, g, reportTg, sh, nd, cp, id, isRisk) {
+  const wRange = [6,7,7.5,8,8.5,9,9.4,10,11,12,13,14];
+  const tgSets = isRisk
+    ? [{v:0.00,l:'0,0 %'},{v:0.005,l:'0,5 %'},{v:0.01,l:'1,0 %'},{v:0.015,l:'1,5 %'},{v:0.02,l:'2,0 %'}]
+    : [{v:0.00,l:'0,0 %'},{v:0.005,l:'0,5 %'},{v:0.01,l:'1,0 %'},{v:0.015,l:'1,5 %'},{v:0.02,l:'2,0 %'},{v:0.025,l:'2,5 %'},{v:0.03,l:'3,0 %'}];
+
+  const palette = ['#4D0003','#7a0a0a','#c04020','#d06010','#b8860b','#d4a017','#8a6000','#2d0002'];
+  const font = { family:"'Franklin Gothic Book', Arial, sans-serif", size:12 };
+
+  const datasets = tgSets.map((tg, i) => ({
+    label: tg.l,
+    data: wRange.map(w => {
+      const ww = w/100;
+      if (ww <= tg.v + 0.005) return null;
+      return dcfGrowth(fcf0, g, ww, tg.v, 6, sh, nd).price;
+    }),
+    borderColor: palette[i % palette.length],
+    backgroundColor: 'transparent',
+    borderWidth: tg.v === (isRisk ? R_RISK_TG : R_BASE_TG) ? 3 : 1.5,
+    pointRadius: 3,
+    pointBackgroundColor: palette[i % palette.length],
+    tension: 0.3,
+  }));
+
+  const existingChart = id === 'sens-base' ? sensBaseChart : sensRiskChart;
+  if (existingChart) existingChart.destroy();
+
+  const chart = new Chart(document.getElementById(id).getContext('2d'), {
+    type: 'line',
+    data: { labels: wRange.map(w => fi(w,1)+' %'), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color:'#111', font, boxWidth:12 }},
+        tooltip: {
+          backgroundColor:'#fff', borderColor:'#d0c8bc', borderWidth:1,
+          titleColor:'#111', bodyColor:'#111',
+          callbacks: {
+            title: items => 'WACC ' + items[0].label,
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.raw !== null ? eur(ctx.raw) : 'N/A'}`
+          }
+        },
+        // Vertical annotation line at report WACC 9.4% and horizontal at current price
+        afterDraw: undefined
+      },
+      scales: {
+        x: { ticks:{ color:'#111', font }, grid:{ color:'#e8e0d4' },
+             title:{ display:true, text:'WACC', color:'#111', font }},
+        y: { ticks:{ color:'#111', font, callback: v => eur(v,0) }, grid:{ color:'#e8e0d4' },
+             title:{ display:true, text:'DCF arvo (€/osake)', color:'#111', font }}
+      }
+    },
+    plugins: [{
+      id: 'annotations',
+      afterDraw(chart) {
+        const ctx = chart.ctx;
+        const xScale = chart.scales.x;
+        const yScale = chart.scales.y;
+        // Find WACC 9.4% index
+        const idx = wRange.indexOf(9.4);
+        if (idx >= 0) {
+          const x = xScale.getPixelForTick(idx);
+          ctx.save();
+          ctx.strokeStyle = 'rgba(77,0,3,0.7)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6,3]);
+          ctx.beginPath();
+          ctx.moveTo(x, yScale.top);
+          ctx.lineTo(x, yScale.bottom);
+          ctx.stroke();
+          ctx.restore();
+        }
+        // Horizontal line at current price
+        const yPx = yScale.getPixelForValue(cp);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(26,74,138,0.6)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4,3]);
+        ctx.beginPath();
+        ctx.moveTo(xScale.left, yPx);
+        ctx.lineTo(xScale.right, yPx);
+        ctx.stroke();
+        ctx.fillStyle = '#1a4a8a';
+        ctx.font = '11px Franklin Gothic Book, Arial';
+        ctx.fillText('Kurssi ' + eur(cp), xScale.left + 4, yPx - 4);
+        ctx.restore();
+      }
+    }]
+  });
+
+  if (id === 'sens-base') sensBaseChart = chart;
+  else sensRiskChart = chart;
+}
+
+// ── DISCLAIMER MODAL ──
+function openDisclaimer() {
+  const o = document.getElementById('disclaimer-overlay');
+  o.style.display = 'flex';
+  // Force reflow so transition fires
+  o.getBoundingClientRect();
+  o.classList.add('visible');
+}
+function closeDisclaimer() {
+  const o = document.getElementById('disclaimer-overlay');
+  o.classList.remove('visible');
+  o.addEventListener('transitionend', () => {
+    o.style.display = 'none';
+  }, { once: true });
+  try { localStorage.setItem('dcf_disclaimer_seen', '1'); } catch(e) {}
+}
+
+// Always show disclaimer on every page load
+(function() {
+  const o = document.getElementById('disclaimer-overlay');
+  o.style.display = 'flex';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => o.classList.add('visible'));
+  });
+})();
+
+// ── INIT ──
+updateWeight();
+calculate();
+</script>
+</body>
+</html>
