@@ -251,7 +251,7 @@
       </div>
 
       <div class="chart-wrapper">
-        <p class="chart-title">Kurssikehitys &mdash; %-muutos (0% = peruspäivä)</p>
+        <p class="chart-title">Kurssikehitys</p>
         <div class="chart-toggles" role="group" aria-label="Vertailuindeksit">
           <label class="chart-toggle">
             <input type="checkbox" id="toggle-omxh25" checked />
@@ -288,7 +288,7 @@
 
       <!-- FCF Chart -->
       <div class="chart-wrapper">
-        <p class="chart-title">Ennustettu vapaa kassavirta &mdash; EUR tuhatta &mdash; 2026E&ndash;2030E</p>
+        <p class="chart-title">Ennustettu vapaa kassavirta &mdash; MEUR &mdash; 2026E&ndash;2030E</p>
         <div style="position:relative; height:280px;">
           <canvas id="fcf-chart"></canvas>
         </div>
@@ -306,7 +306,7 @@
           <p class="manual-fcf-note">Syötä FCF-ennusteet (2026&ndash;2030). Syötteet päivittävät yllä olevan kuvan sekä arvonmäärityksen laskelmat. Voit antaa sarjat erikseen DCF A:lle ja DCF B:lle.</p>
 
           <div class="manual-fcf-block" aria-label="DCF A manuaaliset FCF-syötöt">
-            <p class="manual-fcf-block-label"><strong>DCF A</strong> — Vapaa kassavirta (2026&ndash;2030, EUR tuhatta)</p>
+            <p class="manual-fcf-block-label"><strong>DCF A</strong> — Vapaa kassavirta (2026&ndash;2030, MEUR)</p>
             <div id="manual-fcf-a-grid" class="manual-fcf-grid">
               <div class="manual-fcf-col">
                 <label>2026E</label>
@@ -337,7 +337,7 @@
           </div>
 
           <div class="manual-fcf-block" aria-label="DCF B manuaaliset FCF-syötöt" style="margin-top:12px;">
-            <p class="manual-fcf-block-label"><strong>DCF B</strong> — Vapaa kassavirta (2026&ndash;2030, EUR tuhatta)</p>
+            <p class="manual-fcf-block-label"><strong>DCF B</strong> — Vapaa kassavirta (2026&ndash;2030, MEUR)</p>
             <div id="manual-fcf-b-grid" class="manual-fcf-grid">
               <div class="manual-fcf-col">
                 <label>2026E</label>
@@ -374,7 +374,7 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>EUR tuhatta</th>
+              <th>MEUR</th>
               <th>2024E</th>
               <th>2025E</th>
               <th>2026E</th>
@@ -477,14 +477,14 @@
           <h4 class="group-title toggle" data-target="dcf-a-controls">DCF A oletukset (optimistinen) <span class="toggle-icon">−</span></h4>
           <div class="control-content" id="dcf-a-controls">
             <div class="input-row">
-              <label>WACC:</label>
+              <label>WACC (%):</label>
               <input type="range" id="dcf-a-wacc" min="0.05" max="0.15" step="0.001" value="0.094" />
-              <input type="number" class="number-input" id="dcf-a-wacc-num" min="5" max="15" step="0.1" value="9.4" />%
+              <input type="number" class="number-input" id="dcf-a-wacc-num" min="5" max="15" step="0.1" value="9.4" />
             </div>
             <div class="input-row">
-              <label>Terminaalikasvu:</label>
+              <label>Terminaalikasvu (%):</label>
               <input type="range" id="dcf-a-terminal" min="0" max="0.05" step="0.005" value="0.01" />
-              <input type="number" class="number-input" id="dcf-a-terminal-num" min="0" max="5" step="0.5" value="1" />%
+              <input type="number" class="number-input" id="dcf-a-terminal-num" min="0" max="5" step="0.5" value="1" />
             </div>
           </div>
         </div>
@@ -494,14 +494,14 @@
           <h4 class="group-title toggle" data-target="dcf-b-controls">DCF B oletukset (konservatiivinen) <span class="toggle-icon">−</span></h4>
           <div class="control-content" id="dcf-b-controls">
             <div class="input-row">
-              <label>WACC:</label>
+              <label>WACC (%):</label>
               <input type="range" id="dcf-b-wacc" min="0.05" max="0.15" step="0.001" value="0.094" />
-              <input type="number" class="number-input" id="dcf-b-wacc-num" min="5" max="15" step="0.1" value="9.4" />%
+              <input type="number" class="number-input" id="dcf-b-wacc-num" min="5" max="15" step="0.1" value="9.4" />
             </div>
             <div class="input-row">
-              <label>Terminaalikasvu:</label>
+              <label>Terminaalikasvu (%):</label>
               <input type="range" id="dcf-b-terminal" min="0" max="0.05" step="0.005" value="0.01" />
-              <input type="number" class="number-input" id="dcf-b-terminal-num" min="0" max="5" step="0.5" value="1" />%
+              <input type="number" class="number-input" id="dcf-b-terminal-num" min="0" max="5" step="0.5" value="1" />
             </div>
           </div>
         </div>
@@ -541,46 +541,7 @@
         </table>
       </div>
 
-      <!-- Arvonmäärityksen yhteenveto -->
-      <div class="control-group" style="margin-top:28px;">
-        <h4 class="group-title">Arvonmäärityksen yhteenveto</h4>
-        <div class="valuation-output">
-          <div class="output-row">
-            <span class="output-label">DCF A arvo/osake:</span>
-            <span class="output-value" id="dcf-a-value">EUR 0.00</span>
-          </div>
-          <div class="output-row">
-            <span class="output-label">DCF B arvo/osake:</span>
-            <span class="output-value" id="dcf-b-value">EUR 0.00</span>
-          </div>
-          <div class="output-row weighted">
-            <span class="output-label">Painotettu arvo:</span>
-            <span class="output-value" id="weighted-value">EUR 0.00</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Oletusten yhteenveto -->
-      <div class="two-col-text" style="margin-top:32px;">
-        <div class="prose">
-          <h4>DCF A (optimistinen) keskeiset oletukset:</h4>
-          <ul>
-            <li>Liikevaihdon CAGR: <span id="dcf-a-assumpt-revenue">12%</span></li>
-            <li>EBIT-marginaali: <span id="dcf-a-assumpt-ebit">18%</span></li>
-            <li>WACC: <span id="dcf-a-assumpt-wacc">8,5%</span></li>
-            <li>Terminaalikasvu: <span id="dcf-a-assumpt-terminal">2,5%</span></li>
-          </ul>
-        </div>
-        <div class="prose">
-          <h4>DCF B (konservatiivinen) keskeiset oletukset:</h4>
-          <ul>
-            <li>Liikevaihdon CAGR: <span id="dcf-b-assumpt-revenue">8%</span></li>
-            <li>EBIT-marginaali: <span id="dcf-b-assumpt-ebit">14%</span></li>
-            <li>WACC: <span id="dcf-b-assumpt-wacc">9,5%</span></li>
-            <li>Terminaalikasvu: <span id="dcf-b-assumpt-terminal">2%</span></li>
-          </ul>
-        </div>
-      </div>
     </section>
   </div>
   

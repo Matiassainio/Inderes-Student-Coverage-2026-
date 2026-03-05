@@ -76,10 +76,8 @@ const MINORITY      = 0;       // Vähemmistöosuus
 const fmt = {
   /** Format number with thousands separator */
   num: (n, dec = 0) => n.toLocaleString('en-FI', { minimumFractionDigits: dec, maximumFractionDigits: dec }),
-  /** Format as EUR amount (thousands) */
-  eur: (n) => `EUR ${fmt.num(Math.round(n))}k`,
-  /** Format as EUR millions */
-  eurM: (n) => `EUR ${(n / 1000).toFixed(1)}m`,
+  /** Format as MEUR (thousands → millions) */
+  eur: (n) => `${(n / 1000).toFixed(1)} MEUR`,
   /** Format percentage */
   pct: (n, dec = 1) => `${(n * 100).toFixed(dec)}%`,
 };
@@ -278,24 +276,24 @@ function initFCFChart() {
         legend: { display: false },
         tooltip: {
           backgroundColor: '#0d0d0d',
-          titleFont:       { family: 'DM Mono', size: 11 },
-          bodyFont:        { family: 'DM Mono', size: 11 },
+          titleFont:       { family: 'Franklin Gothic Book, Franklin Gothic Medium, Arial, sans-serif', size: 11 },
+          bodyFont:        { family: 'Franklin Gothic Book, Franklin Gothic Medium, Arial, sans-serif', size: 11 },
           callbacks: {
-            label: ctx => ` ${ctx.dataset.label}: EUR ${ctx.parsed.y.toLocaleString()}k`,
+            label: ctx => ` ${ctx.dataset.label}: ${(ctx.parsed.y / 1000).toFixed(2)} MEUR`,
           },
         },
       },
       scales: {
         x: {
           grid: { color: COLORS.lightGray, drawBorder: false },
-          ticks: { font: { family: 'DM Mono', size: 10 }, color: '#888' },
+          ticks: { font: { family: 'Franklin Gothic Book, Franklin Gothic Medium, Arial, sans-serif', size: 10 }, color: '#888' },
         },
         y: {
           grid: { color: COLORS.lightGray, drawBorder: false },
           ticks: {
-            font: { family: 'DM Mono', size: 10 },
+            font: { family: 'Franklin Gothic Book, Franklin Gothic Medium, Arial, sans-serif', size: 10 },
             color: '#888',
-            callback: v => `${v.toLocaleString()}k`,
+            callback: v => `${(v / 1000).toFixed(1)} MEUR`,
           },
         },
       },
@@ -528,18 +526,32 @@ async function initHistoricalPriceChart() {
           display: false,
         },
         tooltip: {
-          backgroundColor: '#0d0d0d',
-          titleFont: { family: 'DM Mono', size: 11 },
-          bodyFont: { family: 'DM Mono', size: 11 },
+          backgroundColor: '#fff',
+          titleColor: '#000',
+          bodyColor: '#000',
+          borderColor: '#ccc',
+          borderWidth: 1,
+          titleFont: { family: 'Franklin Gothic Book, Franklin Gothic Medium, Arial, sans-serif', size: 13, weight: 'bold' },
+          bodyFont: { family: 'Franklin Gothic Book, Franklin Gothic Medium, Arial, sans-serif', size: 13 },
+          padding: 12,
+          cornerRadius: 6,
+          usePointStyle: false,
+          boxWidth: 12,
+          boxHeight: 12,
+          boxPadding: 6,
           callbacks: {
             title: items => {
               const date = items?.[0]?.label ?? '';
-              return `${date} (0% = ${baseLabel})`;
+              return date;
             },
             label: ctx => {
               const v = Number(ctx.parsed.y);
-              return ` ${ctx.dataset.label}: ${v.toFixed(1)}%`;
+              return ` ${ctx.dataset.label}: ${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
             },
+            labelColor: ctx => ({
+              borderColor: ctx.dataset.borderColor,
+              backgroundColor: ctx.dataset.borderColor,
+            }),
           },
         },
       },
@@ -547,8 +559,8 @@ async function initHistoricalPriceChart() {
         x: {
           grid: { color: COLORS.lightGray, drawBorder: false },
           ticks: {
-            font: { family: 'DM Mono', size: 10 },
-            color: '#888',
+            font: { family: 'Franklin Gothic Book, Franklin Gothic Medium, Arial, sans-serif', size: 12 },
+            color: '#000',
             maxRotation: 0,
             autoSkip: true,
             maxTicksLimit: 8,
@@ -557,8 +569,8 @@ async function initHistoricalPriceChart() {
         y: {
           grid: { color: COLORS.lightGray, drawBorder: false },
           ticks: {
-            font: { family: 'DM Mono', size: 10 },
-            color: '#888',
+            font: { family: 'Franklin Gothic Book, Franklin Gothic Medium, Arial, sans-serif', size: 12 },
+            color: '#000',
             callback: v => `${Number(v).toFixed(0)}%`,
           },
         },
@@ -596,11 +608,11 @@ function buildHistoricalIndexedDatasets(labels, indexedInderesValues, baseLabel,
       label: 'Inderes (%-muutos)',
       data: indexedInderesValues,
       borderColor: COLORS.burgundy,
-      backgroundColor: COLORS.burgundy + '12',
+      backgroundColor: 'transparent',
       borderWidth: 2,
       pointRadius: 0,
       pointHoverRadius: 0,
-      fill: true,
+      fill: false,
       tension: 0.15,
     },
   ];
