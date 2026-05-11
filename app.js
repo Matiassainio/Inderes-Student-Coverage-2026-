@@ -445,7 +445,7 @@ async function initHistoricalPriceChart() {
   if (!canvas) return;
 
   // Keep the filename as-is; encode spaces for fetch.
-  const url = 'assets/financial_data_/INDERES%20Historical%20Data%20(1).csv';
+  const url = 'assets/financial_data_/Inderes%20Oyj%20Stock%20Price%20History%20(1).csv';
 
   let text;
   try {
@@ -465,13 +465,13 @@ async function initHistoricalPriceChart() {
     {
       checkboxId: 'toggle-omxh25',
       label: 'OMX Helsinki 25',
-      url: 'assets/financial_data_/OMX%20Helsinki%2025%20Historical%20Data%20(2).csv',
+      url: 'assets/financial_data_/OMX%20Helsinki%2025%20Historical%20Data%20(4).csv',
       color: COLORS.gold,
     },
     {
       checkboxId: 'toggle-firstnorth',
       label: 'First North Finland PI',
-      url: 'assets/financial_data_/First%20North%20Finland%20PI%20Historical%20Data.csv',
+      url: 'assets/financial_data_/First%20North%20Finland%20PI%20Historical%20Data%20(1).csv',
       color: '#333',
     },
   ];
@@ -886,8 +886,8 @@ function updateAllDisplays() {
   
   // Update probability gauge displays and charts
   updateProbabilityGauges();
-  
-  // Update FCF chart
+
+  // Update FCF chart (no-op if chart not present) and other displays
   updateFCFChart();
 }
 
@@ -1431,7 +1431,6 @@ function initPdfViewer() {
 /* ── Bootstrap ────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   initDisclaimer();
-  initPdfTocPanel();
   initPdfNavButtons();
   initPdfViewer();
   initFCFChart();
