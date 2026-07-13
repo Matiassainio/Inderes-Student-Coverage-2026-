@@ -99,27 +99,30 @@ function calcDCF(params) {
     fcfs.push(fcf);
   }
 
-  // PV of FCFs
-  const pvFCFs = fcfs.map((f, i) => f / Math.pow(1 + wacc, i + 1));
+  // PV of FCFs — first forecast year (t=0) is not discounted (valuation date = start of year 1)
+  const pvFCFs = fcfs.map((f, i) => f / Math.pow(1 + wacc, i));
   const sumPV  = pvFCFs.reduce((a, b) => a + b, 0);
 
-  // Terminal value (Gordon growth), discounted one period beyond last FCF
+  // Terminal value (Gordon growth), valued as of the same period as the last explicit FCF.
+  // WACC <= terminal growth makes the perpetuity denominator zero or negative — not a valid result.
   const lastFCF    = fcfs.at(-1);
-  const TV         = termGrowth > 0
+  const invalid    = wacc <= termGrowth;
+  const TV         = !invalid && termGrowth > 0
     ? (lastFCF * (1 + termGrowth)) / (wacc - termGrowth)
-    : lastFCF / wacc;
-  const pvTV       = TV / Math.pow(1 + wacc, years + 1);
+    : (!invalid ? lastFCF / wacc : NaN);
+  const pvTV       = invalid ? NaN : TV / Math.pow(1 + wacc, years - 1);
 
-  const debtFreeDCF = sumPV + pvTV;
-  const equityVal   = debtFreeDCF + CASH - DEBT - MINORITY;
-  const pricePerSh  = equityVal / SHARE_COUNT_K;
+  const debtFreeDCF = invalid ? NaN : sumPV + pvTV;
+  const equityVal   = invalid ? NaN : debtFreeDCF + CASH - DEBT - MINORITY;
+  const pricePerSh  = invalid ? NaN : equityVal / SHARE_COUNT_K;
 
   return {
     revenues,
     fcfs,
-    EV:       Math.round(debtFreeDCF),
-    equityVal:Math.round(equityVal),
-    pricePerSh: pricePerSh.toFixed(2),
+    invalid,
+    EV:       invalid ? null : Math.round(debtFreeDCF),
+    equityVal:invalid ? null : Math.round(equityVal),
+    pricePerSh: invalid ? null : pricePerSh.toFixed(2),
   };
 }
 
@@ -151,28 +154,31 @@ function calcDCFValuation(params, manualOverride) {
     });
   }
 
-  // Discount each FCF: year i (0-based) => period i+1
-  const pvFCFs = fcfs.map((f, i) => f / Math.pow(1 + wacc, i + 1));
+  // Discount each FCF: year i (0-based) => period i (2026 = valuation date, not discounted)
+  const pvFCFs = fcfs.map((f, i) => f / Math.pow(1 + wacc, i));
   const sumPV = pvFCFs.reduce((a, b) => a + b, 0);
 
-  // Terminal value (Gordon growth) discounted one period beyond last FCF
+  // Terminal value (Gordon growth), valued as of the same period as the last explicit FCF.
+  // WACC <= terminal growth makes the perpetuity denominator zero or negative — not a valid result.
   const lastFCF = fcfs.at(-1);
-  const TV = termGrowth > 0
+  const invalid = wacc <= termGrowth;
+  const TV = !invalid && termGrowth > 0
     ? (lastFCF * (1 + termGrowth)) / (wacc - termGrowth)
-    : lastFCF / wacc;
-  const pvTV = TV / Math.pow(1 + wacc, years + 1);
+    : (!invalid ? lastFCF / wacc : NaN);
+  const pvTV = invalid ? NaN : TV / Math.pow(1 + wacc, years - 1);
 
-  const debtFreeDCF = sumPV + pvTV;
+  const debtFreeDCF = invalid ? NaN : sumPV + pvTV;
   // Equity bridge: + kassa − korollinen velka − vähemmistöosuus
-  const equityVal = debtFreeDCF + CASH - DEBT - MINORITY;
-  const pricePerSh = equityVal / SHARE_COUNT_K;
+  const equityVal = invalid ? NaN : debtFreeDCF + CASH - DEBT - MINORITY;
+  const pricePerSh = invalid ? NaN : equityVal / SHARE_COUNT_K;
 
   return {
     revenues,
     fcfs,
-    EV: Math.round(debtFreeDCF),
-    equityVal: Math.round(equityVal),
-    pricePerSh: pricePerSh.toFixed(2),
+    invalid,
+    EV: invalid ? null : Math.round(debtFreeDCF),
+    equityVal: invalid ? null : Math.round(equityVal),
+    pricePerSh: invalid ? null : pricePerSh.toFixed(2),
   };
 }
 
@@ -181,11 +187,12 @@ function calcWeightedValuation() {
   const dcfA = calcDCF(state.dcfA);
   const dcfB = calcDCF(state.dcfB);
   const weights = state.weights;
-  
+  const invalid = dcfA.invalid || dcfB.invalid;
+
   return {
     dcfA,
     dcfB,
-    weighted: {
+    weighted: invalid ? { invalid: true, EV: null, equityVal: null, pricePerSh: null } : {
       EV: Math.round(dcfA.EV * weights.dcfA + dcfB.EV * weights.dcfB),
       equityVal: Math.round(dcfA.equityVal * weights.dcfA + dcfB.equityVal * weights.dcfB),
       pricePerSh: (parseFloat(dcfA.pricePerSh) * weights.dcfA + parseFloat(dcfB.pricePerSh) * weights.dcfB).toFixed(2)
@@ -197,11 +204,12 @@ function calcWeightedValuationForValuation() {
   const dcfA = calcDCFValuation(state.dcfA, state.manualFcf?.dcfA);
   const dcfB = calcDCFValuation(state.dcfB, state.manualFcf?.dcfB);
   const weights = state.weights;
+  const invalid = dcfA.invalid || dcfB.invalid;
 
   return {
     dcfA,
     dcfB,
-    weighted: {
+    weighted: invalid ? { invalid: true, EV: null, equityVal: null, pricePerSh: null } : {
       EV: Math.round(dcfA.EV * weights.dcfA + dcfB.EV * weights.dcfB),
       equityVal: Math.round(dcfA.equityVal * weights.dcfA + dcfB.equityVal * weights.dcfB),
       pricePerSh: (parseFloat(dcfA.pricePerSh) * weights.dcfA + parseFloat(dcfB.pricePerSh) * weights.dcfB).toFixed(2),
@@ -854,24 +862,27 @@ function updateGaugeLabel(elId, pct) {
 }
 
 /* ── Display Updates ──────────────────────────────────────── */
+const DIVZERO_WARNING = '⚠ Ei laskettavissa (jako nollalla: WACC ≤ terminaalikasvu)';
+const DIVZERO_WARNING_SHORT = '⚠ Ei laskettavissa';
+
 function updateAllDisplays() {
   const results = calcWeightedValuationForValuation();
-  
+
   // Update DCF results table
-  setEl('dcf-a-ev', fmt.eur(results.dcfA.EV));
-  setEl('dcf-b-ev', fmt.eur(results.dcfB.EV));
-  setEl('weighted-ev', fmt.eur(results.weighted.EV));
-  
-  setEl('dcf-a-equity', fmt.eur(results.dcfA.equityVal));
-  setEl('dcf-b-equity', fmt.eur(results.dcfB.equityVal));
-  setEl('weighted-equity', fmt.eur(results.weighted.equityVal));
-  
-  setEl('dcf-a-per-share', `EUR ${results.dcfA.pricePerSh}`);
-  setEl('dcf-b-per-share', `EUR ${results.dcfB.pricePerSh}`);
-  setEl('weighted-per-share', `EUR ${results.weighted.pricePerSh}`);
-  setEl('weighted-per-share-hero', `EUR ${results.weighted.pricePerSh}`);
-  setEl('gauge-a-per-share', `EUR ${results.dcfA.pricePerSh}`);
-  setEl('gauge-b-per-share', `EUR ${results.dcfB.pricePerSh}`);
+  setEl('dcf-a-ev', results.dcfA.invalid ? DIVZERO_WARNING : fmt.eur(results.dcfA.EV));
+  setEl('dcf-b-ev', results.dcfB.invalid ? DIVZERO_WARNING : fmt.eur(results.dcfB.EV));
+  setEl('weighted-ev', results.weighted.invalid ? DIVZERO_WARNING : fmt.eur(results.weighted.EV));
+
+  setEl('dcf-a-equity', results.dcfA.invalid ? DIVZERO_WARNING : fmt.eur(results.dcfA.equityVal));
+  setEl('dcf-b-equity', results.dcfB.invalid ? DIVZERO_WARNING : fmt.eur(results.dcfB.equityVal));
+  setEl('weighted-equity', results.weighted.invalid ? DIVZERO_WARNING : fmt.eur(results.weighted.equityVal));
+
+  setEl('dcf-a-per-share', results.dcfA.invalid ? DIVZERO_WARNING : `EUR ${results.dcfA.pricePerSh}`);
+  setEl('dcf-b-per-share', results.dcfB.invalid ? DIVZERO_WARNING : `EUR ${results.dcfB.pricePerSh}`);
+  setEl('weighted-per-share', results.weighted.invalid ? DIVZERO_WARNING : `EUR ${results.weighted.pricePerSh}`);
+  setEl('weighted-per-share-hero', results.weighted.invalid ? DIVZERO_WARNING_SHORT : `EUR ${results.weighted.pricePerSh}`);
+  setEl('gauge-a-per-share', results.dcfA.invalid ? DIVZERO_WARNING_SHORT : `EUR ${results.dcfA.pricePerSh}`);
+  setEl('gauge-b-per-share', results.dcfB.invalid ? DIVZERO_WARNING_SHORT : `EUR ${results.dcfB.pricePerSh}`);
   
   // Update assumption displays
   setEl('dcf-a-assumpt-revenue', fmt.pct(state.dcfA.revenueCAGR));
