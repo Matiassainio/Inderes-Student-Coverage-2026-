@@ -235,7 +235,8 @@ main#main-content {
 .topbar-meta strong {
   color: #ffffff;
   display: block;
-  font-size: 3.2rem;
+  font-size: clamp(1.2rem, 6vw, 3.2rem);
+  white-space: nowrap;
   font-family: 'Franklin Gothic Medium', Arial, sans-serif;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -1498,12 +1499,18 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 @media (max-width: 640px) {
+  #main-content { padding: 0 14px 40px; }
   .metrics-row { grid-template-columns: 1fr; }
   .two-col-text { grid-template-columns: 1fr; }
   .dcf-layout { grid-template-columns: 1fr; }
-  .gauges-row { grid-template-columns: 1fr; }
+  .gauges-row,
+  #valuation .gauges-row { grid-template-columns: 1fr; }
   .finpos-grid { grid-template-columns: 1fr; }
   .risk-grid { grid-template-columns: 1fr; }
   .industry-peers { grid-template-columns: 1fr; }
   .toc-columns { grid-template-columns: 1fr; gap: 10px; }
+  .manual-fcf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .analysts-row { flex-wrap: wrap; gap: 24px; }
+  .intro-text { padding: 0 16px !important; }
+  .section-block { padding: 1.25rem 0.9rem; }
 }
