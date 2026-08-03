@@ -14,6 +14,65 @@ const COLORS = {
 /* Osakkeiden lukumäärä (milj.) — Tilinpäätös 2024 */
 const SHARE_COUNT_K = 1_719.141;
 
+/* ── Analyytikon tuloslaskelmaennusteet (EUR tuhatta) ───────
+   Kaksi skenaariota: A = kasvu, B = konservatiivinen.
+   EBITA = liiketulos ennen konserniliikearvon poistoa.
+   Konserniliikearvon poisto EI ole verovähennyskelpoinen → vero lasketaan
+   EBITA-tasolla (siksi efektiivinen vero on korkeampi kuin lakikanta). */
+const FORECAST_A = {
+  years:        [2026,       2027,       2028,       2029,       2030],
+  revenue:      [20_775.09,  22_828.391, 24_969.023, 26_666.443, 28_535.902],
+  ebita:        [2_527.49,   3_172.744,  3_754.92,   4_236.628,  4_776.462],
+  depreciation: [300,        320,        340,        350,        360],   // poistot (pl. goodwill)
+  // Δkäyttöpääoma (+ = kassaan). Vastaa kassavirtalaskelman riviä täydellä
+  // tarkkuudella (MEUR-taulukossa pyöristettynä 0,1 M€:oon).
+  wcChange:     [-310,       221,        56,         -24,        251],
+};
+
+const FORECAST_B = {
+  // Poimittu riski-DCF:n kassavirtalaskelmasta (Excel, M€ → tuhatta).
+  // Riskicase verottaa lähempänä EBIT-tasoa, joten käteisvero ja capex annetaan suoraan.
+  years:        [2026, 2027, 2028, 2029, 2030],
+  ebita:        [2200, 2100, 2100, 2100, 2000],
+  depreciation: [300,  300,  300,  300,  300],
+  cashTax:      [400,  300,  300,  300,  300],   // (Cash Taxes Paid)
+  capex:        [300,  300,  300,  300,  300],   // (Gross capital expenditure)
+  wcChange:     [200,  100,  100,  200,  100],   // (Change in Working Capital)
+};
+
+/* Suomen yhteisöverokanta: 20 % vuoteen 2026, 18 % vuodesta 2027.
+   Sovelletaan EBITA:an (goodwill-poisto ei vähennyskelpoinen). */
+const CORP_TAX = { untilChange: 0.20, fromChange: 0.18 };
+const TAX_CHANGE_YEAR = 2027;
+
+/* Investoinnit prosenttia liikevaihdosta (mallin oletus). */
+const CAPEX_PCT_OF_REVENUE = 0.015;
+
+function corpTaxRate(year) {
+  return year >= TAX_CHANGE_YEAR ? CORP_TAX.fromChange : CORP_TAX.untilChange;
+}
+
+/* Vapaa kassavirta suoraan tuloslaskelmasta — oikea verokäsittely (ei flat-veroa):
+   FCF = EBITA + poistot − käteisvero(20/18 % × EBITA) + Δkäyttöpääoma − capex(1,5 % liikevaihdosta) */
+function computeForecastFCF(fc) {
+  return fc.years.map((year, i) => {
+    const ebita   = fc.ebita[i];
+    // Käteisvero: annettu arvo jos on (riskicase ~EBIT-taso), muuten 20/18 % EBITA:sta.
+    const cashTax = fc.cashTax ? fc.cashTax[i] : corpTaxRate(year) * ebita;
+    // Capex: annettu arvo jos on, muuten 1,5 % liikevaihdosta.
+    const capex   = fc.capex ? fc.capex[i] : CAPEX_PCT_OF_REVENUE * fc.revenue[i];
+    return ebita + fc.depreciation[i] - cashTax + fc.wcChange[i] - capex;
+  });
+}
+
+/* Analyytikon oletukset per vuosi (pyöristetty) — käytetään muokattavien kenttien alustukseen. */
+function forecastFcfByYear(fc) {
+  const fcf = computeForecastFCF(fc);
+  const out = {};
+  fc.years.forEach((y, i) => { out[y] = Math.round(fcf[i]); });
+  return out;
+}
+
 /* Base historical financials (EUR thousands) */
 const HISTORICAL = {
   years:    [2019, 2020, 2021, 2022, 2023],
@@ -35,42 +94,26 @@ let state = {
     revenueCAGR:  0.08,   // 8%
     ebitMargin:   0.14,   // 14%
     wacc:         0.094,  // 9.4%
-    termGrowth:   0.01,   // 1%
+    termGrowth:   0.00,   // 0% — riskiskenaario ilman terminaalikasvua
   },
   weights: {
     dcfA: 0.75,  // 75%
     dcfB: 0.25,  // 25%
   },
   manualFcf: {
-    dcfA: {
-      enabled: true,
-      byYear: {
-        2026: 1700,
-        2027: 2560,
-        2028: 2940,
-        2029: 3310,
-        2030: 3990,
-      },
-    },
-    dcfB: {
-      enabled: true,
-      byYear: {
-        2026: 1859,
-        2027: 1906,
-        2028: 1803,
-        2029: 1800,
-        2030: 1495.5,
-      },
-    },
+    // Analyytikon oletusennuste = tuloslaskelmasta johdettu FCF (oikea verokäsittely).
+    // Kentät ovat edelleen käsin muokattavissa; vain oletusluvut päivittyvät.
+    dcfA: { enabled: true, byYear: forecastFcfByYear(FORECAST_A) },
+    dcfB: { enabled: true, byYear: forecastFcfByYear(FORECAST_B) },
   },
 };
 
 const VALUATION_YEARS = [2026, 2027, 2028, 2029, 2030];
 
 /* Balance sheet items for equity bridge (EUR thousands) — Tilinpäätös 2024 */
-const CASH          = 2_310;   // Rahavarat
-const DEBT          = 1_801;   // Korollinen velka
-const MINORITY      = 0;       // Vähemmistöosuus
+const CASH          = 1_800;   // Rahavarat (Cash and cash equivalents)
+const DEBT          = 1_300;   // Korollinen velka (Interest-bearing debt)
+const MINORITY      = 100;     // Vähemmistöosuus (Minority interest)
 
 /* ── Utility helpers ──────────────────────────────────────── */
 const fmt = {
@@ -82,69 +125,14 @@ const fmt = {
   pct: (n, dec = 1) => `${(n * 100).toFixed(dec)}%`,
 };
 
-/* ── DCF Calculator ───────────────────────────────────────── */
-function calcDCF(params) {
-  const { revenueCAGR, ebitMargin, wacc, termGrowth } = params;
-  const baseRevenue = HISTORICAL.revenue.at(-1); // last historical year
-  const years       = 5;
-  let revenues      = [];
-  let fcfs          = [];
-
-  for (let t = 1; t <= years; t++) {
-    const rev  = baseRevenue * Math.pow(1 + revenueCAGR, t);
-    const ebit = rev * ebitMargin;
-    // Simplified FCF = EBIT * (1 - tax) - capex + D&A (rough proxy)
-    const fcf  = ebit * 0.78 * 0.85;
-    revenues.push(rev);
-    fcfs.push(fcf);
-  }
-
-  // PV of FCFs — first forecast year (t=0) is not discounted (valuation date = start of year 1)
-  const pvFCFs = fcfs.map((f, i) => f / Math.pow(1 + wacc, i));
-  const sumPV  = pvFCFs.reduce((a, b) => a + b, 0);
-
-  // Terminal value (Gordon growth), valued as of the same period as the last explicit FCF.
-  // WACC <= terminal growth makes the perpetuity denominator zero or negative — not a valid result.
-  const lastFCF    = fcfs.at(-1);
-  const invalid    = wacc <= termGrowth;
-  const TV         = !invalid && termGrowth > 0
-    ? (lastFCF * (1 + termGrowth)) / (wacc - termGrowth)
-    : (!invalid ? lastFCF / wacc : NaN);
-  const pvTV       = invalid ? NaN : TV / Math.pow(1 + wacc, years - 1);
-
-  const debtFreeDCF = invalid ? NaN : sumPV + pvTV;
-  const equityVal   = invalid ? NaN : debtFreeDCF + CASH - DEBT - MINORITY;
-  const pricePerSh  = invalid ? NaN : equityVal / SHARE_COUNT_K;
-
-  return {
-    revenues,
-    fcfs,
-    invalid,
-    EV:       invalid ? null : Math.round(debtFreeDCF),
-    equityVal:invalid ? null : Math.round(equityVal),
-    pricePerSh: invalid ? null : pricePerSh.toFixed(2),
-  };
-}
-
 /* ── DCF Calculator (Valuation horizon + manual FCF) ───── */
-function calcDCFValuation(params, manualOverride) {
+function calcDCFValuation(params, manualOverride, forecast) {
   const { revenueCAGR, ebitMargin, wacc, termGrowth } = params;
 
-  // Use 2025–2030 as explicit valuation forecast years.
+  // Ennustevuodet 2026–2030. Oletus-FCF johdetaan tuloslaskelmasta (oikea verokäsittely).
   const years = VALUATION_YEARS.length;
-  const baseRevenue2023 = HISTORICAL.revenue.at(-1);
-  const revenue2024 = baseRevenue2023 * (1 + revenueCAGR);
-
-  const revenues = [];
-  const fcfsCalc = [];
-
-  for (let t = 1; t <= years; t++) {
-    const rev = revenue2024 * Math.pow(1 + revenueCAGR, t);
-    const ebit = rev * ebitMargin;
-    const fcf = ebit * 0.78 * 0.85;
-    revenues.push(rev);
-    fcfsCalc.push(fcf);
-  }
+  const revenues = forecast.revenue ? forecast.revenue.slice() : [];
+  const fcfsCalc = computeForecastFCF(forecast);
 
   let fcfs = fcfsCalc;
   if (manualOverride && manualOverride.enabled) {
@@ -154,18 +142,19 @@ function calcDCFValuation(params, manualOverride) {
     });
   }
 
-  // Discount each FCF: year i (0-based) => period i (2026 = valuation date, not discounted)
-  const pvFCFs = fcfs.map((f, i) => f / Math.pow(1 + wacc, i));
+  // Diskonttaus: 2026 = periodi 1 (arvostushetki 2025 lopussa), 2030 = periodi 5.
+  const pvFCFs = fcfs.map((f, i) => f / Math.pow(1 + wacc, i + 1));
   const sumPV = pvFCFs.reduce((a, b) => a + b, 0);
 
-  // Terminal value (Gordon growth), valued as of the same period as the last explicit FCF.
-  // WACC <= terminal growth makes the perpetuity denominator zero or negative — not a valid result.
+  // Terminaaliarvo (Gordon growth). Mallin konventio: diskontataan periodilla years+1
+  // (= 6), eli terminaaliarvo sijoitetaan vuosi viimeisen ennustevuoden (2030) jälkeen.
+  // WACC <= terminaalikasvu tekee nimittäjästä nollan tai negatiivisen — ei validi tulos.
   const lastFCF = fcfs.at(-1);
   const invalid = wacc <= termGrowth;
   const TV = !invalid && termGrowth > 0
     ? (lastFCF * (1 + termGrowth)) / (wacc - termGrowth)
     : (!invalid ? lastFCF / wacc : NaN);
-  const pvTV = invalid ? NaN : TV / Math.pow(1 + wacc, years - 1);
+  const pvTV = invalid ? NaN : TV / Math.pow(1 + wacc, years + 1);
 
   const debtFreeDCF = invalid ? NaN : sumPV + pvTV;
   // Equity bridge: + kassa − korollinen velka − vähemmistöosuus
@@ -183,26 +172,9 @@ function calcDCFValuation(params, manualOverride) {
 }
 
 /* ── Weighted Valuation Calculator ───────────────────────── */
-function calcWeightedValuation() {
-  const dcfA = calcDCF(state.dcfA);
-  const dcfB = calcDCF(state.dcfB);
-  const weights = state.weights;
-  const invalid = dcfA.invalid || dcfB.invalid;
-
-  return {
-    dcfA,
-    dcfB,
-    weighted: invalid ? { invalid: true, EV: null, equityVal: null, pricePerSh: null } : {
-      EV: Math.round(dcfA.EV * weights.dcfA + dcfB.EV * weights.dcfB),
-      equityVal: Math.round(dcfA.equityVal * weights.dcfA + dcfB.equityVal * weights.dcfB),
-      pricePerSh: (parseFloat(dcfA.pricePerSh) * weights.dcfA + parseFloat(dcfB.pricePerSh) * weights.dcfB).toFixed(2)
-    }
-  };
-}
-
 function calcWeightedValuationForValuation() {
-  const dcfA = calcDCFValuation(state.dcfA, state.manualFcf?.dcfA);
-  const dcfB = calcDCFValuation(state.dcfB, state.manualFcf?.dcfB);
+  const dcfA = calcDCFValuation(state.dcfA, state.manualFcf?.dcfA, FORECAST_A);
+  const dcfB = calcDCFValuation(state.dcfB, state.manualFcf?.dcfB, FORECAST_B);
   const weights = state.weights;
   const invalid = dcfA.invalid || dcfB.invalid;
 
@@ -222,8 +194,8 @@ let fcfChart = null;
 
 function buildFCFData() {
   const labels = VALUATION_YEARS.map(year => `${year}E`);
-  const dcfA   = calcDCFValuation(state.dcfA, state.manualFcf?.dcfA).fcfs;
-  const dcfB   = calcDCFValuation(state.dcfB, state.manualFcf?.dcfB).fcfs;
+  const dcfA   = calcDCFValuation(state.dcfA, state.manualFcf?.dcfA, FORECAST_A).fcfs;
+  const dcfB   = calcDCFValuation(state.dcfB, state.manualFcf?.dcfB, FORECAST_B).fcfs;
   const weighted = dcfA.map((a, i) => a * state.weights.dcfA + dcfB[i] * state.weights.dcfB);
 
   return { labels, dcfA, dcfB, weighted };
@@ -868,15 +840,7 @@ const DIVZERO_WARNING_SHORT = '⚠ Ei laskettavissa';
 function updateAllDisplays() {
   const results = calcWeightedValuationForValuation();
 
-  // Update DCF results table
-  setEl('dcf-a-ev', results.dcfA.invalid ? DIVZERO_WARNING : fmt.eur(results.dcfA.EV));
-  setEl('dcf-b-ev', results.dcfB.invalid ? DIVZERO_WARNING : fmt.eur(results.dcfB.EV));
-  setEl('weighted-ev', results.weighted.invalid ? DIVZERO_WARNING : fmt.eur(results.weighted.EV));
-
-  setEl('dcf-a-equity', results.dcfA.invalid ? DIVZERO_WARNING : fmt.eur(results.dcfA.equityVal));
-  setEl('dcf-b-equity', results.dcfB.invalid ? DIVZERO_WARNING : fmt.eur(results.dcfB.equityVal));
-  setEl('weighted-equity', results.weighted.invalid ? DIVZERO_WARNING : fmt.eur(results.weighted.equityVal));
-
+  // Update DCF results table (per-share only; EV/equity rows removed from UI)
   setEl('dcf-a-per-share', results.dcfA.invalid ? DIVZERO_WARNING : `EUR ${results.dcfA.pricePerSh}`);
   setEl('dcf-b-per-share', results.dcfB.invalid ? DIVZERO_WARNING : `EUR ${results.dcfB.pricePerSh}`);
   setEl('weighted-per-share', results.weighted.invalid ? DIVZERO_WARNING : `EUR ${results.weighted.pricePerSh}`);
@@ -1014,12 +978,20 @@ function wireControlInputs() {
     }));
 
     // Populate input fields from state (analyst defaults are already set).
+    // Sync the "Analyytikon arvio" labels to the same defaults so they never go stale.
     for (let i = 0; i < VALUATION_YEARS.length; i++) {
       const year = VALUATION_YEARS[i];
       const inputEl = yearInputs[i].el;
       if (inputEl) {
         inputEl.value = manualState.byYear[year] ?? '';
         inputEl.step = '1';
+
+        const analystEl = inputEl.nextElementSibling;
+        if (analystEl && analystEl.classList.contains('manual-fcf-analyst')) {
+          const v = manualState.byYear[year];
+          const formatted = Number.isFinite(v) ? Number(v).toLocaleString('fi-FI') : '—';
+          analystEl.textContent = (i === 0 ? `Analyytikon arvio: ${formatted}` : formatted);
+        }
       }
     }
 
