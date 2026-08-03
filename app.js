@@ -87,13 +87,13 @@ let state = {
   dcfA: {
     revenueCAGR:  0.12,   // 12%
     ebitMargin:   0.18,   // 18%
-    wacc:         0.094,  // 9.4%
+    wacc:         0.095,  // 9.5%
     termGrowth:   0.01,   // 1%
   },
   dcfB: {
     revenueCAGR:  0.08,   // 8%
     ebitMargin:   0.14,   // 14%
-    wacc:         0.094,  // 9.4%
+    wacc:         0.095,  // 9.5%
     termGrowth:   0.00,   // 0% — riskiskenaario ilman terminaalikasvua
   },
   weights: {
