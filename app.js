@@ -977,21 +977,13 @@ function wireControlInputs() {
       el: document.getElementById(`${inputPrefix}-${y}`),
     }));
 
-    // Populate input fields from state (analyst defaults are already set).
-    // Sync the "Analyytikon arvio" labels to the same defaults so they never go stale.
+    // Populate the single editable grid per DCF from state (analyst defaults).
     for (let i = 0; i < VALUATION_YEARS.length; i++) {
       const year = VALUATION_YEARS[i];
       const inputEl = yearInputs[i].el;
       if (inputEl) {
         inputEl.value = manualState.byYear[year] ?? '';
         inputEl.step = '1';
-
-        const analystEl = inputEl.nextElementSibling;
-        if (analystEl && analystEl.classList.contains('manual-fcf-analyst')) {
-          const v = manualState.byYear[year];
-          const formatted = Number.isFinite(v) ? Number(v).toLocaleString('fi-FI') : '—';
-          analystEl.textContent = (i === 0 ? `Analyytikon arvio: ${formatted}` : formatted);
-        }
       }
     }
 
